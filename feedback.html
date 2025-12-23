@@ -287,6 +287,28 @@ function updateRowGap() {
         cursor:pointer;
         line-height:1;
     }
+
+        /* === 導航下拉（左上角） === */
+        .toolbar {
+            justify-content: center;
+            padding-left: 0;
+            text-align: center;
+            }
+        .nav-select {
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid #666;
+            background: #222;
+            color: #fff;
+            font-size: 14px;
+            padding: 0 8px;
+            font-family: 'ShopeeMedium';
+            cursor: pointer;
+        }
+
+        /* === 隱藏：字級大小調整（標題/日期/內文/備註） === */
+        .font-size-control { display: none !important; }
+
 </style>
 </head>
 <body>
@@ -300,20 +322,28 @@ function updateRowGap() {
 <div id="toast-container"></div>
 
 <div class="toolbar">
+    <!-- 導航下拉：左上角切換頁面 -->
+    <select class="nav-select" aria-label="頁面切換" onchange="if(this.value){window.location.href=this.value;}">
+        <option value="https://jimmywu-commits.github.io/bank/index.html">信用卡專區</option>
+        <option value="https://jimmywu-commits.github.io/bank/feedback.html" selected>信用卡回饋方案</option>
+    </select>
+
+    <div class="divider"></div>
+
     <!-- 字級調整 -->
-    <div class="input-group">
+    <div class="input-group font-size-control">
         <label>標題</label>
         <input type="number" value="83" min="30" max="140" oninput="updateSize('title', this.value)">
     </div>
-    <div class="input-group">
+    <div class="input-group font-size-control">
         <label>日期</label>
         <input type="number" value="35" min="20" max="100" oninput="updateSize('date', this.value)">
     </div>
-    <div class="input-group">
+    <div class="input-group font-size-control">
         <label>內文</label>
         <input type="number" value="25" min="16" max="60" oninput="updateSize('content', this.value)">
     </div>
-    <div class="input-group">
+    <div class="input-group font-size-control">
         <label>備註</label>
         <input type="number" value="29" min="16" max="60" oninput="updateSize('note', this.value)">
     </div>
@@ -698,11 +728,31 @@ function applyCardContent(cardElem, logoName, cellText) {
             div.style.marginTop = '0px';
         }
 
-        // 框起來的部分變紅字：支援 「」 / 【】 / " "
-        let html = line;
-        html = html.replace(/「([^「」]+)」/g, '<span class="line-red">$1</span>');
-        html = html.replace(/【([^【】]+)】/g, '<span class="line-red">$1</span>');
-        html = html.replace(/"([^"]+)"/g, '<span class="line-red">$1</span>');
+        // === 文字上色規則 ===
+        // 1) 框起來的部分變紅字：支援 「」 / 【】 / " "
+        // 2) 內文若出現「回饋」，從「回饋」（包含）之後全部變紅
+        let raw = line;
+
+        // 觸發字：遇到「回饋」或「享」其後（包含觸發字）皆為紅字，取最早出現的位置
+        const idx1 = raw.indexOf('回饋');
+        const idx2 = raw.indexOf('享');
+        const idx = (idx1 >= 0 && idx2 >= 0) ? Math.min(idx1, idx2) : (idx1 >= 0 ? idx1 : idx2);
+
+        let before = idx >= 0 ? raw.slice(0, idx) : raw;
+        let after  = idx >= 0 ? raw.slice(idx) : '';
+
+        function applyQuoteHighlight(s) {
+            let out = s;
+            out = out.replace(/「([^「」]+)」/g, '<span class="line-red">$1</span>');
+            out = out.replace(/【([^【】]+)】/g, '<span class="line-red">$1</span>');
+            out = out.replace(/"([^"]+)"/g, '<span class="line-red">$1</span>');
+            return out;
+        }
+
+        let html = applyQuoteHighlight(before);
+        if (idx >= 0) {
+            html += '<span class="line-red">' + applyQuoteHighlight(after) + '</span>';
+        }
 
         div.innerHTML = html;
         inner.appendChild(div);
