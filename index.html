@@ -329,6 +329,16 @@
     <div id="toast-container"></div>
 
     <div class="toolbar">
+        <div class="input-group">
+            <select id="page-switcher" class="tool-btn btn-select"
+                style="width:180px;height:28px;background-color:#555;"
+                onchange="onPageSwitch(this.value)">
+                <option value="https://jimmywu-commits.github.io/bank/index.html">信用卡專區</option>
+                <option value="https://jimmywu-commits.github.io/bank/feedback.html">信用卡回饋方案</option>
+            </select>
+        </div>
+        <div class="divider"></div>
+
         <div class="input-group" style="display:none;">
             <label>標題 px</label>
             <input type="number" value="42" min="20" max="80" oninput="updateSize('title', this.value)">
@@ -1540,5 +1550,25 @@ function isLogoFangFile(file, relativePath) {
 }
 
 </script>
+
+<script>
+function onPageSwitch(url){
+    if(!url) return;
+    if(window.location.href === url) return;
+    window.location.href = url;
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const s = document.getElementById('page-switcher');
+    if(!s) return;
+    const cur = window.location.href;
+    for(const o of s.options){
+        if(cur.includes(o.value)){
+            s.value = o.value;
+            break;
+        }
+    }
+});
+</script>
+
 </body>
 </html>
