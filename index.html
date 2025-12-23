@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1200">
+    <title>銀行刷卡回饋 Banner - 工單直讀 XLSX 版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <style>
+        /* --- 字體設定 --- */
+        @font-face {
+            font-family: 'ShopeeMedium';
+            src: url('./程式檔案/ShopeeNotoSans(content)-Medium.ttf') format('truetype');
+        }
+
+        @font-face {
+            font-family: 'ShopeeRegular';
+            src: url('./程式檔案/ShopeeNotoSans(content)-Regular.ttf') format('truetype');
+        }
+
+        :root {
+            --bg-color-1: #dcf0ff; 
+            --bg-color-2: #fffacf; 
+            --bg-color-3: #ffe3cf; 
+            --bg-color-4: #dfe5fe;
+            --border-color: #253ac6;
+
+            --highlight-red: #cc0000;
+                        --keyword-red: #C00000;
+--content-text-color: #222222; 
+
+            --title-size: 42px;   
+            --date-size: 30px;    
+            --content-size: 40px; 
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #555;
+            display: flex; flex-direction: column; align-items: center;
+            padding-top: 80px; padding-bottom: 40px;
+            font-family: 'ShopeeRegular', "Microsoft JhengHei", sans-serif;
+        }
+
+        /* --- 工具列 --- */
+        .toolbar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+            background-color: #333; display: flex; align-items: center; justify-content: center;
+            gap: 15px; 
+            z-index: 1000; color: #fff;
+            font-family: 'ShopeeMedium', sans-serif;
+        }
+
+        .input-group { display: flex; align-items: center; gap: 4px; }
+        .input-group label { font-size: 14px; color: #ddd; white-space: nowrap; }
+        .input-group input {
+            padding: 5px; border-radius: 4px;
+            border: 1px solid #666; background: #222; color: #fff;
+            text-align: center; font-size: 16px;
+        }
+        .input-group input[type="number"] { width: 45px; }
+
+        .tool-btn {
+            padding: 6px 10px; border: none; border-radius: 4px;
+            font-size: 14px; cursor: pointer; font-family: 'ShopeeMedium', sans-serif;
+            color: #fff; height: 28px;
+        }
+        .btn-upload { background-color: #ff9800; }
+        .btn-download { background-color: #4caf50; }
+        .btn-select { background-color: #3f51b5; }
+        .divider { width: 1px; height: 30px; background-color: #666; }
+
+        /* --- Toast 提示 --- */
+        #toast-container {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* --- Banner 本體 --- */
+        .banner-container {
+            width: 1200px;
+            background-color: #fff;
+            border: 30px solid var(--border-color);
+            display: flex; flex-direction: column;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .content-wrapper {
+            display: flex;
+            width: 100%;
+            align-items: stretch;
+        }
+
+        .left-sidebar {
+            width: 330px; 
+            flex-shrink: 0;
+            background-color: #fff;
+            padding: 25px 0 25px 25px; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .logo-box {
+            width: 100%;
+            flex: 1 1 auto;
+            min-height: 200px;
+            background-color: #fff; 
+            border-radius: 6px; 
+            position: relative;
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid #ccc;
+        }
+        
+        .logo-img-container {
+            width: 100%; height: 100%;
+            display: flex;
+            justify-content: center; 
+            align-items: center;
+            padding: 10px;
+        }
+        
+        .logo-img { 
+            max-width: 90%; 
+            max-height: 90%; 
+            width: auto;
+            height: auto;
+            display: block;
+        }
+
+        .logo-text-placeholder {
+            display: none;
+        }
+
+        .edit-logo-btn {
+            position: absolute; top: 10px; left: 10px;
+            background-color: rgba(0, 0, 0, 0.5); color: #fff;
+            border-radius: 50%; width: 36px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 1px solid #fff; font-size: 18px; z-index: 10;
+        }
+        .edit-logo-btn:hover { background-color: rgba(0,0,0,0.8); }
+
+        .right-content {
+            flex-grow: 1;
+            padding: 25px 30px;
+            display: flex; flex-direction: column;
+            gap: 20px; 
+            background-color: #fff; 
+        }
+
+        .info-block {
+            border-radius: 6px;
+            padding: 20px 25px; 
+            position: relative;
+        }
+
+        .color-edit-btn {
+            position: absolute;
+            top: 5px; right: 5px;
+            width: 25px; height: 25px;
+            background: #fff; border: 1px solid #ccc;
+            border-radius: 4px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            z-index: 5;
+            transition: background 0.1s;
+        }
+        .color-edit-btn:hover { background: #eee; }
+
+        .block-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            text-align: center; font-size: var(--title-size);
+            font-family: 'ShopeeMedium', sans-serif; color: #333;
+            margin-bottom: 20px; display: flex; align-items: center; justify-content: center;
+            line-height: 1.2;
+        }
+        .block-header::before, .block-header::after {
+            content: ""; display: block; flex: 1;
+            height: 2px;
+            background-color: #333; margin: 0 15px;
+        }
+
+        .item-row {
+            display: flex; align-items: flex-start;
+            margin-bottom: 15px; font-size: var(--content-size);
+            color: var(--content-text-color); 
+            line-height: 1.3; font-family: 'ShopeeMedium', sans-serif;
+        }
+
+        .date-badge {
+            background-color: #231815; color: #fff;
+            font-size: var(--date-size); font-family: 'ShopeeRegular', sans-serif;
+            margin-left: -25px; 
+            border-top-left-radius: 0; border-bottom-left-radius: 0;
+            border-top-right-radius: 30px; border-bottom-right-radius: 30px;
+            padding: 4px 18px 4px 10px; 
+            margin-right: 15px; white-space: nowrap; margin-top: 4px;
+        }
+
+        .kw-red { color: #c00000; }
+
+        /* 手動選取換色：紅字 */
+        .manual-red { color: #c00000; }
+
+        .red-text { 
+            color: var(--highlight-red); 
+            font-family: 'ShopeeMedium', sans-serif; 
+        }
+
+        /* 括號內文字固定 30px */
+        .paren-text {
+            font-size: 30px;
+        }
+        
+        .block-1 { background-color: #dcf0ff; }
+        .block-2 { background-color: #fffacf; }
+        .block-3 { background-color: #ffe3cf; }
+        .block-4 { background-color: #dfe5fe; }
+
+        .disclaimer-text {
+            font-size: 20px; color: #555; text-align: center;
+            padding: 8px 0 4px 0; 
+            margin-top: 10px; 
+            font-family: 'ShopeeRegular', sans-serif;
+        }
+
+        
+
+/* ※ 開頭註解：放在色塊外 */
+
+/* ※ 開頭註解：永遠顯示在色塊下方（白底滿版，視覺上像在色塊外） */
+
+/* ※ 開頭註解：永遠顯示在色塊下方（白底滿版，視覺上像在色塊外） */
+
+/* ※ 開頭註解：永遠顯示在色塊下方（白底滿版，視覺上像在色塊外） */
+
+/* ※ 開頭註解：顯示在該組色塊正下方（白底滿版） */
+.disclaimer-outside {
+    display: block;
+    background: #fff;
+    color: #555;
+    font-size: 24px; /* 指定 24px */
+    font-family: 'ShopeeRegular', sans-serif;
+    line-height: 1.4;
+
+    /* 白底條緊貼色塊下方 */
+    margin: 5px -30px 7px -30px;
+    padding: 3px 30px 2px 30px;
+
+    text-align: center;
+}
+
+.footer-wrapper {
+            width: 100%;
+            padding: 0 30px 25px 30px; 
+            background-color: #fff;
+        }
+
+        .footer-bar {
+            background-color: #000; color: #fff;
+            text-align: center; padding: 20px; font-size: 32px;
+            cursor: pointer; display: block; text-decoration: none;
+            font-family: 'ShopeeMedium', sans-serif;
+            border-radius: 6px; 
+        }
+        
+        .arrow-icon {
+            font-size: 70%;
+            vertical-align: middle;
+            margin-left: 8px;
+            position: relative; top: -2px;
+        }
+    
+    /* === 浮動 LOG 通知（右上角） === */
+    .floating-tip {
+        position: fixed;
+        top: 8px;
+        right: 8px;
+        z-index: 2000;
+        display: none;
+        background: rgba(255, 87, 34, 0.98);
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 14px;
+        box-shadow: 0 8px 20px rgba(0,0,0,.25);
+        font-size: 13px;
+        line-height: 1.3;
+        max-width: 320px;
+        backdrop-filter: blur(4px);
+    }
+    .floating-tip .tip-close {
+        position:absolute;
+        top:6px;
+        right:8px;
+        border:none;
+        background:transparent;
+        color:#fff;
+        font-size:16px;
+        cursor:pointer;
+        line-height:1;
+    }
+</style>
+</head>
+<body>
+
+<div id="floatingTip" class="floating-tip" role="status" aria-live="polite">
+  <button class="tip-close" aria-label="關閉提醒" onclick="(function(){var b=document.getElementById('floatingTip'); if(b){ b.style.display='none'; }})();">×</button>
+  <div id="floatingTipMsg">提醒</div>
+</div>
+
+
+    <!-- Toast 容器 -->
+    <div id="toast-container"></div>
+
+    <div class="toolbar">
+        <div class="input-group" style="display:none;">
+            <label>標題 px</label>
+            <input type="number" value="42" min="20" max="80" oninput="updateSize('title', this.value)">
+        </div>
+        <div class="input-group" style="display:none;">
+            <label>日期 px</label>
+            <input type="number" value="30" min="20" max="80" oninput="updateSize('date', this.value)">
+        </div>
+        <div class="input-group" style="display:none;">
+            <label>內文 px</label>
+            <input type="number" value="40" min="20" max="80" oninput="updateSize('content', this.value)">
+        </div>
+        
+        <div class="input-group">
+            <label>字級</label>
+            <input type="number" value="40" min="20" max="80" oninput="updateSize('content', this.value)">
+        </div>
+
+        
+        <div class="divider" style="display:none;"></div>
+
+        <div class="input-group" style="display:none;">
+            <label>高亮色</label>
+            <input type="text" id="highlight-hex" value="#CC0000" style="width: 70px; font-size: 14px;" onchange="updateColorVar('--highlight-red', this.value)">
+            <input type="color" id="highlight-color-picker" style="width: 0; height: 0; padding: 0; border: none; opacity: 0; position: absolute;" oninput="updateHexInputAndVar('highlight', this.value)">
+            <button class="tool-btn btn-select" onclick="document.getElementById('highlight-color-picker').click()">選</button>
+        </div>
+
+<div class="input-group" style="display:none;">
+            <label>內文色</label>
+            <input type="text" id="content-text-hex" value="#222222" style="width: 70px; font-size: 14px;" onchange="updateColorVar('--content-text-color', this.value)">
+            <input type="color" id="content-text-color-picker" style="width: 0; height: 0; padding: 0; border: none; opacity: 0; position: absolute;" oninput="updateHexInputAndVar('content-text', this.value)">
+            <button class="tool-btn btn-select" onclick="document.getElementById('content-text-color-picker').click()">選</button>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <!-- 色塊換色先隱藏 -->
+        <div class="input-group" style="display:none;">
+            <label>色塊換色</label>
+            <input type="text" id="hex-input" placeholder="#FFFFFF" style="width: 70px; font-size: 14px;" onchange="applyColorChange(this.value)">
+            <input type="color" id="color-picker-input" style="width: 0; height: 0; padding: 0; border: none; opacity: 0; position: absolute;" oninput="document.getElementById('hex-input').value = this.value.toUpperCase(); applyColorChange(this.value)">
+            <button class="tool-btn btn-select" onclick="document.getElementById('color-picker-input').click()">選</button>
+        </div>
+
+        <div class="divider" style="display:none;"></div>
+        
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;">
+
+<!-- 工單 + 圖片（資料夾）一次上傳：優先 File System Access API，fallback 用 webkitdirectory -->
+<input type="file" id="workOrderFolderInput" webkitdirectory directory multiple style="display:none;">
+<button class="tool-btn btn-upload" onclick="triggerWorkOrderWithImages()">上傳工單與圖片</button>
+
+        <div class="divider"></div>
+
+        <!-- 獨立的 LOGO 資料夾上傳按鈕 -->
+        <input type="file" id="logoFolderInput" webkitdirectory directory multiple style="display:none;">
+   
+        
+        <div class="divider"></div>
+        
+        <select id="bank-selector" class="tool-btn btn-select" onchange="onBankSelectorChange(this.value)" style="width: 180px; height: 28px; background-color: #00bcd4;">
+            <option value="" disabled selected>選擇銀行</option>
+        </select>
+        
+        <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#c00000')" style="background-color:#c00000;">換紅色</button>
+        <button class="tool-btn btn-download" onclick="downloadImage()">下載 JPG</button>
+    </div>
+
+    <!-- 編輯區包一層，用來縮放 -->
+    <div id="editor-wrapper">
+
+    <!-- 單一銀行用 Banner（做圖片匯出用） -->
+    <div id="capture-area" class="banner-container">
+        
+        <div class="content-wrapper">
+            <div class="left-sidebar">
+                <div class="logo-box" id="sidebar-bg">
+                    
+                    <input type="file" id="logoInput" accept="image/*" style="display: none;" onchange="handleManualLogoUpload(this)">
+                    
+                    <div class="edit-logo-btn" onclick="document.getElementById('logoInput').click()" title="手動更換 Logo">
+                        📷
+                    </div>
+
+                    <div class="logo-img-container">
+                        <img id="current-logo" 
+                             src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23ffffff'/%3E%3Ctext x='50%25' y='50%25' font-size='20' text-anchor='middle' dy='.3em' fill='%23666'%3E等待工單載入...%3C/text%3E%3C/svg%3E" 
+                             data-placeholder="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' fill='%23ffffff'/%3E%3Ctext x='50%25' y='50%25' font-size='20' text-anchor='middle' dy='.3em' fill='%23666'%3ELogo載入失敗，請檢查路徑或檔名%3C/text%3E%3C/svg%3E"
+                             class="logo-img" 
+                             alt="Logo">
+                    </div>
+                </div>
+                <div id="logo-name-text" class="logo-text-placeholder"></div>
+            </div>
+
+            <div id="right-content-area" class="right-content">
+                <div style="text-align:center; padding: 100px; color:#999;">
+                    <p style="font-size: 32px;">請點擊「上傳工單」載入資料</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-wrapper">
+            <a href="#" class="footer-bar" id="footer-button">
+                限量/看詳情 <span class="arrow-icon">▶</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 全部銀行用：每一家一個獨立 Banner -->
+    <div id="all-banks-wrapper" style="display:none;"></div>
+
+    </div> <!-- end of editor-wrapper -->
+
+    <script>
+        
+// === 上傳狀態旗標（防呆用） ===
+let hasWorkOrder = false; // 解析工單完成後設為 true
+let hasLogos = false;     // 讀取 LOGO 資料夾後設為 true
+
+function showTip(message, autoHideMs){
+    try{
+        const box = document.getElementById('floatingTip');
+        const msg = document.getElementById('floatingTipMsg');
+        if(!box || !msg) return;
+        msg.textContent = message || '提醒';
+        box.style.display = 'block';
+        if(autoHideMs && autoHideMs > 0){
+            setTimeout(()=>{ box.style.display='none'; }, autoHideMs);
+        }
+    }catch(e){}
+}
+/* ===== 工單 + 圖片：一次上傳（資料夾） =====
+   - 優先：File System Access API（Chromium 系）
+   - fallback：<input webkitdirectory>（常見相容方案）
+*/
+async function triggerWorkOrderWithImages() {
+    // File System Access API
+    if (window.showDirectoryPicker) {
+        try {
+            await pickWorkOrderDirectoryViaFSAccess();
+            return;
+        } catch (e) {
+            // 使用者取消或權限問題 → fallback
+            console.warn('[FolderUpload] showDirectoryPicker 失敗，改用 webkitdirectory：', e);
+        }
+    }
+    const input = document.getElementById('workOrderFolderInput');
+    if (input) input.click();
+}
+
+async function pickWorkOrderDirectoryViaFSAccess() {
+    const dirHandle = await window.showDirectoryPicker();
+    const files = [];
+
+    async function walkDirectory(handle, basePath = '') {
+        for await (const [, entry] of handle.entries()) {
+            if (entry.kind === 'file') {
+                try {
+                    const f = await entry.getFile();
+                    try { f.relativePath = basePath + f.name; } catch(e) {}
+                files.push(f);
+                } catch (e) {
+                    console.warn('[FolderUpload] getFile 失敗：', e);
+                }
+            } else if (entry.kind === 'directory') {
+                await walkDirectory(entry, basePath + entry.name + '/');
+            }
+        }
+    }
+
+    await walkDirectory(dirHandle, '');
+    handleWorkOrderFolderFiles(files, true);
+}
+
+function handleWorkOrderFolderFiles(fileList, fromFSAccess = false) {
+    const arr = Array.from(fileList || []);
+    if (!arr.length) {
+        showToast('資料夾內沒有檔案', 'error');
+        return;
+    }
+
+    const workOrder = arr.find(f => {
+        const n = (f && f.name) ? f.name.toLowerCase() : '';
+        return n.endsWith('.xlsx') || n.endsWith('.xls') || n.endsWith('.csv');
+    });
+
+    const images = arr.filter(f => {
+        if (!f) return false;
+        if (f.type && f.type.startsWith('image/')) return true;
+        const n = (f.name || '').toLowerCase();
+        return n.endsWith('.png') || n.endsWith('.jpg') || n.endsWith('.jpeg') || n.endsWith('.gif') || n.endsWith('.webp') || n.endsWith('.svg');
+    });
+
+    if (!workOrder) {
+        showToast('資料夾內找不到工單檔（.xlsx/.xls/.csv）', 'error');
+    } else {
+        handleFile(workOrder);
+        showToast(`已從資料夾載入工單：${workOrder.name}${fromFSAccess ? '（File System Access API）' : ''}`, 'success');
+    }
+
+    if (images.length) {
+        handleLogoFolderFiles(images);
+        showToast(`已從資料夾讀取圖片：${images.length} 張`, 'success');
+    } else {
+        showToast('資料夾內沒有圖片檔（可略過）', 'info');
+    }
+}
+
+let currentTargetBlock = null;
+        let allBankData = [];
+        let currentBankNameForDownload = '';
+
+        /* 預設 fallback logo 圖（請放在 index.html 同一層） */
+        const FALLBACK_LOGO_PATH = './download.svg';
+
+        /* ===== LOGO 資料夾：由按鈕上傳的檔案清單建立 Map ===== */
+        let logoNameToUrl = new Map();
+
+        function fileBaseName(name) {
+            return name.replace(/\.[^.]+$/, '').trim();
+        }
+
+        function normalizeName(str) {
+            if (!str) return '';
+            return str
+                .replace(/\(.*?\)/g, '')
+                .replace(/（.*?）/g, '')
+                .replace(/\s+/g, '')
+                .toLowerCase();
+        }
+
+        function handleLogoFolderFiles(fileList) {
+            const files = Array.from(fileList || []).filter(f => (f.type && f.type.startsWith('image/')) && isLogoFangFile(f, f.webkitRelativePath || f.relativePath || ''));
+
+            if (!files.length) {
+                showToast('LOGO 資料夾裡沒有圖片檔', 'error');
+                return;
+            }
+
+            logoNameToUrl = new Map();
+            const duplicateNames = new Set();
+
+            files.forEach(file => {
+                const key = fileBaseName(file.name);
+                const url = URL.createObjectURL(file);
+                if (logoNameToUrl.has(key)) {
+                    duplicateNames.add(key);
+                } else {
+                    logoNameToUrl.set(key, url);
+                }
+            });
+
+            showToast(`已讀取 LOGO 資料夾，共 ${logoNameToUrl.size} 個檔名`, 'success');
+            if (duplicateNames.size) {
+                const arr = Array.from(duplicateNames);
+                showToast(`偵測到重複檔名（只採第一個）：${arr.slice(0, 5).join('、')}${arr.length > 5 ? '…' : ''}`, 'info');
+            }
+
+            if (currentBankNameForDownload) {
+                loadBankLogo(currentBankNameForDownload);
+            }
+        
+    // 設定 LOGO 旗標
+    try { hasLogos = (logoNameToUrl && logoNameToUrl.size > 0); } catch(e) {}
+}
+
+        function showToast(message, type = 'error') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+
+            const toast = document.createElement('div');
+            toast.textContent = message;
+            toast.style.padding = '10px 14px';
+            toast.style.borderRadius = '6px';
+            toast.style.fontSize = '14px';
+            toast.style.color = '#fff';
+            toast.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+            toast.style.maxWidth = '260px';
+            toast.style.wordBreak = 'break-all';
+            toast.style.backgroundColor =
+                type === 'error' ? '#e53935' :
+                type === 'success' ? '#43a047' :
+                '#424242';
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.transition = 'opacity 0.4s, transform 0.4s';
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-6px)';
+                setTimeout(() => {
+                    if (toast.parentNode === container) {
+                        container.removeChild(toast);
+                    }
+                }, 400);
+            }, 3000);
+        }
+
+        const RAW_CSV_CONTENT = `MSBN_06,"國泰世華銀行\nLOGO","【登錄】\n9/1-9/30 單筆滿$5,000回饋$150\n9/1-9/30   單筆分期滿$20,000回饋$1,200\n\n※以上活動均有條件限制且部分活動需登錄，詳見信用卡注意事項 ",限量/看詳情`;
+
+        function updateSize(type, val) {
+            document.documentElement.style.setProperty(`--${type}-size`, val + 'px');
+        }
+
+        function updateColorVar(variableName, colorValue) {
+            const normalizedColor = colorValue.toUpperCase();
+            document.documentElement.style.setProperty(variableName, normalizedColor);
+        }
+
+// === 選取範圍暫存（避免點工具列後消失） ===
+let __savedRange = null;
+
+function saveSelectionRange() {
+    try {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const r = sel.getRangeAt(0);
+        if (!r || r.collapsed) return;
+
+        let container = document.getElementById('right-content-area');
+        const common = r.commonAncestorContainer;
+        const commonEl = common.nodeType === 1 ? common : common.parentElement;
+
+        // 全部銀行模式：每張卡片會有自己的 .right-content
+        if (!container && commonEl) {
+            container = commonEl.closest('.right-content');
+        }
+
+        if (!container || !commonEl || !container.contains(commonEl)) return;
+
+        __savedRange = r.cloneRange();
+    } catch (e) {}
+}
+
+document.addEventListener('mouseup', saveSelectionRange);
+document.addEventListener('keyup', saveSelectionRange);
+
+function applyColorToSelection(color) {
+    try {
+        const sel = window.getSelection();
+        const range = (__savedRange && !__savedRange.collapsed)
+            ? __savedRange
+            : (sel && sel.rangeCount ? sel.getRangeAt(0) : null);
+
+        if (!range || range.collapsed) return;
+
+        const common = range.commonAncestorContainer;
+        const commonEl = common.nodeType === 1 ? common : common.parentElement;
+
+        // 單一銀行模式：#right-content-area
+        // 全部銀行模式：每張 Banner 內都有自己的 .right-content
+        let container = document.getElementById('right-content-area');
+
+        // 若選取不在單一銀行容器內，改抓選取所在的 .right-content（支援「全部銀行」）
+        if (commonEl && container && !container.contains(commonEl)) {
+            const nearest = commonEl.closest('.right-content');
+            if (nearest) container = nearest;
+        }
+
+        if (!commonEl || !container || !container.contains(commonEl)) return;
+
+        if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
+        const span = document.createElement('span');
+        span.style.color = color;
+
+        try {
+            range.surroundContents(span);
+        } catch (e) {
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('foreColor', false, color);
+        }
+
+        __savedRange = null;
+        if (sel) sel.removeAllRanges();
+    } catch (e) {}
+}
+
+// --- 選取範圍暫存：避免點工具列後 selection 消失 ---
+function updateHexInputAndVar(inputIdPrefix, colorValue) {
+            const hexInputId = `${inputIdPrefix}-hex`;
+            const hexInput = document.getElementById(hexInputId);
+            if (hexInput) hexInput.value = colorValue.toUpperCase(); 
+
+            let variableName;
+            if (inputIdPrefix === 'highlight') {
+                variableName = '--highlight-red';
+            } else if (inputIdPrefix === 'content-text') {
+                variableName = '--content-text-color';
+            }
+            
+            if (variableName) {
+                updateColorVar(variableName, colorValue);
+            }
+        }
+
+        function openColorPicker(button, blockClassName) {
+            let target = button.closest('.info-block');
+            if (target && target.getAttribute('data-block-id') === blockClassName) {
+                currentTargetBlock = target;
+            } else {
+                currentTargetBlock = document.querySelector(`[data-block-id="${blockClassName}"]`);
+            }
+            
+            const picker = document.getElementById('color-picker-input');
+            const hexInput = document.getElementById('hex-input');
+            if (!currentTargetBlock || !picker || !hexInput) return;
+            
+            const currentColor = window.getComputedStyle(currentTargetBlock).backgroundColor;
+            hexInput.value = rgbToHex(currentColor);
+            picker.click();
+        }
+
+
+function openColorPickerSelf(button) {
+    try {
+        currentTargetBlock = button.closest('.info-block');
+        const picker = document.getElementById('color-picker-input');
+        const hexInput = document.getElementById('hex-input');
+        if (!currentTargetBlock || !picker || !hexInput) return;
+
+        const currentColor = window.getComputedStyle(currentTargetBlock).backgroundColor;
+        hexInput.value = rgbToHex(currentColor);
+        picker.click();
+    } catch (e) {}
+}
+
+        function applyColorChange(colorValue) {
+            if (currentTargetBlock) {
+                currentTargetBlock.style.backgroundColor = colorValue;
+            }
+        }
+        
+        function rgbToHex(rgb) {
+            const match = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+            if (!match) return '#FFFFFF'; 
+            const toHex = (c) => parseInt(c).toString(16).padStart(2, '0');
+            return ("#" + toHex(match[1]) + toHex(match[2]) + toHex(match[3])).toUpperCase();
+        }
+
+        /* ---- 編輯畫面縮放到 65%（不影響下載） ---- */
+        function applyEditorScale() {
+            const wrapper = document.getElementById('editor-wrapper');
+            if (!wrapper) return;
+            wrapper.style.transform = 'scale(0.65)';
+            wrapper.style.transformOrigin = 'top center';
+        }
+
+        /* ---- 下載 JPG ---- */
+        function downloadImage() {
+            const selector = document.getElementById('bank-selector');
+            const mode = selector ? selector.value : null;
+
+            const wrapper = document.getElementById('editor-wrapper');
+            const prevTransform = wrapper ? wrapper.style.transform || '' : '';
+            const prevOrigin = wrapper ? wrapper.style.transformOrigin || '' : '';
+
+            if (wrapper) {
+                wrapper.style.transform = '';
+                wrapper.style.transformOrigin = '';
+            }
+
+            
+            // ---- 下載前檢查：需同時有工單與 LOGO（即時計算避免時序誤判） ----
+            try {
+                hasLogos = !!(logoNameToUrl && logoNameToUrl.size > 0);
+                hasWorkOrder = hasWorkOrder || (Array.isArray(allBankData) && allBankData.length > 0);
+            } catch(e) {}
+            if (!hasWorkOrder || !hasLogos) {
+                showTip('請先上傳工單與 LOGO 後再下載 JPG', 4000);
+                if (wrapper) {
+                    wrapper.style.transform = prevTransform;
+                    wrapper.style.transformOrigin = prevOrigin;
+                }
+                return;
+            }
+if (mode === '__ALL__') {
+                const banners = document.querySelectorAll('#all-banks-wrapper .banner-container');
+                if (!banners.length) {
+                    showToast('目前沒有可下載的銀行 Banner', 'error');
+                    if (wrapper) {
+                        wrapper.style.transform = prevTransform;
+                        wrapper.style.transformOrigin = prevOrigin;
+                    }
+                    return;
+                }
+
+                banners.forEach((banner, index) => {
+                    const bankName = banner.getAttribute('data-bank-name') || `銀行_${index + 1}`;
+                    const cleanFileName = bankName.replace(/\s/g, '_');
+
+                    const localEditBtns = banner.querySelectorAll('.edit-logo-btn');
+                    const localColorBtns = banner.querySelectorAll('.color-edit-btn');
+                    localEditBtns.forEach(btn => btn.style.display = 'none');
+                    localColorBtns.forEach(btn => btn.style.display = 'none');
+
+                    html2canvas(banner, { 
+                        scale: 1,
+                        useCORS: true,
+                        allowTaint: true
+                    }).then(canvas => {
+                        const link = document.createElement("a");
+                        link.download = cleanFileName + "_Banner.jpg";
+                        link.href = canvas.toDataURL("image/jpeg", 0.9);
+                        link.click();
+
+                        localEditBtns.forEach(btn => btn.style.display = '');
+                        localColorBtns.forEach(btn => btn.style.display = '');
+                    });
+                });
+
+                setTimeout(() => {
+                    if (wrapper) {
+                        wrapper.style.transform = prevTransform;
+                        wrapper.style.transformOrigin = prevOrigin;
+                    }
+                }, 500);
+
+                return;
+            }
+
+            const logoBtn = document.querySelector('#capture-area .edit-logo-btn');
+            const colorBtns = document.querySelectorAll('#capture-area .color-edit-btn');
+            
+            if (logoBtn) logoBtn.style.display = 'none';
+            colorBtns.forEach(btn => btn.style.display = 'none');
+
+            const element = document.getElementById("capture-area");
+            const cleanFileName = (currentBankNameForDownload || '銀行回饋').replace(/\s/g, '_');
+            
+            html2canvas(element, { 
+                scale: 1, 
+                useCORS: true,
+                allowTaint: true
+            }).then(canvas => {
+                const link = document.createElement("a");
+                link.download = cleanFileName + "_Banner.jpg";
+                link.href = canvas.toDataURL("image/jpeg", 0.9);
+                link.click();
+                
+                if (logoBtn) logoBtn.style.display = 'flex';
+                colorBtns.forEach(btn => btn.style.display = 'flex');
+
+                if (wrapper) {
+                    wrapper.style.transform = prevTransform;
+                    wrapper.style.transformOrigin = prevOrigin;
+                }
+            });
+        }
+        
+        function extractAndSetColorForElement(imgElement, targetBox) {
+            if (!imgElement || !targetBox) return;
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = 10; 
+            canvas.height = 10;
+            imgElement.setAttribute('crossOrigin', 'Anonymous');
+            
+            try {
+                context.drawImage(imgElement, 5, 5, 1, 1, 0, 0, 1, 1);
+                const pixelData = context.getImageData(0, 0, 1, 1).data; 
+                const rgbColor = `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
+                targetBox.style.backgroundColor = rgbColor;
+            } catch (e) {
+                console.warn("無法讀取圖片像素進行吸色:", e.message);
+                targetBox.style.backgroundColor = "#FFFFFF"; 
+            }
+        }
+
+        function extractAndSetColor(imgElement) {
+            const logoBox = document.getElementById('sidebar-bg');
+            extractAndSetColorForElement(imgElement, logoBox);
+        }
+        
+        function handleManualLogoUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = document.getElementById('current-logo');
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        extractAndSetColor(img);
+                        showToast('已套用手動上傳的 Logo', 'success');
+                    }
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function handleAllBankManualLogoUpload(input) {
+            if (!(input.files && input.files[0])) return;
+            const file = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const logoBox = input.closest('.logo-box');
+                if (!logoBox) return;
+                const img = logoBox.querySelector('.logo-img');
+                if (!img) return;
+                img.src = e.target.result;
+                img.onload = function() {
+                    extractAndSetColorForElement(img, logoBox);
+                    showToast('已套用手動上傳的 Logo', 'success');
+                };
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function loadBankLogo(bankNameRaw) {
+            console.log("[Logo] 來自工單 B 欄原始銀行名：", bankNameRaw);
+            const bankName = (bankNameRaw || '').trim();
+            currentBankNameForDownload = bankName;
+
+            const logoNameElement = document.getElementById('logo-name-text');
+            if (logoNameElement) {
+                logoNameElement.textContent = bankName;
+            }
+
+            const imgElement = document.getElementById('current-logo');
+            const logoBox = document.getElementById('sidebar-bg');
+
+            if (!bankName) {
+                useFallbackLogo(imgElement, logoBox, "銀行名稱為空，已使用預設 Logo");
+                return;
+            }
+
+            const safeName = bankName.replace(/[\\\/:*?"<>|]/g, '').trim();
+
+            if (logoNameToUrl && logoNameToUrl.size > 0) {
+                const normBank = normalizeName(safeName);
+                let matchedKey = null;
+
+                for (const key of logoNameToUrl.keys()) {
+                    const normKey = normalizeName(key);
+                    if (!normKey) continue;
+
+                    if (normBank.includes(normKey)) {
+                        matchedKey = key;
+                        break;
+                    }
+                }
+
+                if (matchedKey) {
+                    const url = logoNameToUrl.get(matchedKey);
+                    console.log("[Logo] 使用 LOGO 資料夾內檔案：", matchedKey, url);
+
+                    imgElement.onload = function () {
+                        extractAndSetColor(imgElement);
+                        showToast(`已從 LOGO 資料夾載入：${matchedKey}`, 'success');
+                    };
+                    imgElement.onerror = function () {
+                        console.warn("[Logo] 資料夾圖片載入失敗，改用預設路徑邏輯");
+                        loadBankLogoFromDefaultPath(safeName, imgElement, logoBox);
+                    };
+                    imgElement.src = url;
+                    logoBox.style.backgroundColor = "#FFFFFF";
+                    return;
+                }
+            }
+
+            loadBankLogoFromDefaultPath(safeName, imgElement, logoBox);
+        }
+
+        function loadBankLogoFromDefaultPath(safeName, imgElement, logoBox) {
+            const candidates = [
+                `./logo/${safeName}.jpg`,
+                `./logo/${safeName}.jpeg`,
+                `./logo/${safeName}.png`
+            ];
+
+            let currentIndex = 0;
+
+            function tryNext() {
+                if (currentIndex >= candidates.length) {
+                    useFallbackLogo(imgElement, logoBox, `找不到對應 Logo：${safeName}（已使用預設 Logo）`);
+                    return;
+                }
+
+                const path = candidates[currentIndex];
+                console.log("[Logo] 嘗試載入預設路徑：", path);
+
+                imgElement.onload = function() {
+                    extractAndSetColor(imgElement);
+                    showToast(`已載入 Logo：${path}`, 'success');
+                };
+
+                imgElement.onerror = function() {
+                    console.warn("[Logo] 載入失敗，嘗試下一個：", path);
+                    currentIndex++;
+                    tryNext();
+                };
+
+                imgElement.src = path;
+                logoBox.style.backgroundColor = "#FFFFFF";
+            }
+
+            tryNext();
+        }
+
+        function useFallbackLogo(imgElement, logoBox, msg) {
+            console.warn("[Logo] 使用預設 fallback Logo：", FALLBACK_LOGO_PATH);
+            imgElement.onload = function() {
+                logoBox.style.backgroundColor = "#FFFFFF";
+                if (msg) showToast(msg, 'error');
+            };
+            imgElement.onerror = function() {
+                console.error("[Logo] 連 fallback Logo 也載入失敗：", FALLBACK_LOGO_PATH);
+            };
+            imgElement.src = FALLBACK_LOGO_PATH;
+        }
+
+        function resolveLogoUrlForAll(bankNameRaw) {
+            const bankName = (bankNameRaw || '').trim();
+            if (!bankName) return FALLBACK_LOGO_PATH;
+            const safeName = bankName.replace(/[\\\/:*?"<>|]/g, '').trim();
+
+            if (logoNameToUrl && logoNameToUrl.size > 0) {
+                const normBank = normalizeName(safeName);
+                for (const key of logoNameToUrl.keys()) {
+                    const normKey = normalizeName(key);
+                    if (!normKey) continue;
+                    if (normBank.includes(normKey)) {
+                        return logoNameToUrl.get(key);
+                    }
+                }
+            }
+
+            return FALLBACK_LOGO_PATH;
+        }
+
+        function processContent(contentString) {
+            const blocks = [];
+            let currentBlock = null;
+            
+            const lines = (contentString || '')
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+
+            for (const line of lines) {
+                if (line.startsWith('【') && line.endsWith('】')) {
+                    const title = line.substring(1, line.length - 1).trim();
+                    currentBlock = {
+                        title,
+                        items: [],
+                        disclaimer: null
+                    };
+                    blocks.push(currentBlock);
+                } else if (/^(※|\*)/.test(line)) {
+                    if (!currentBlock) continue;
+                    const clean = line.replace(/^(※|\*)\s*/, '');
+                    if (currentBlock.disclaimer) {
+                        currentBlock.disclaimer += ' ' + clean;
+                    } else {
+                        currentBlock.disclaimer = clean;
+                    }
+                } else if (currentBlock) {
+                    currentBlock.items.push(line);
+                }
+            }
+            return blocks;
+        }
+
+        function renderBanner(data) {
+            const rightContent = document.getElementById('right-content-area');
+            const footerButton = document.getElementById('footer-button');
+            const captureArea = document.getElementById('capture-area');
+            const allWrapper = document.getElementById('all-banks-wrapper');
+
+            if (!rightContent) return;
+
+            captureArea.style.display = 'block';
+            allWrapper.style.display = 'none';
+            
+            loadBankLogo(data.logoName); 
+            footerButton.innerHTML = `${(data.footer && String(data.footer).trim()) ? data.footer : '限量/看詳情'} <span class="arrow-icon">▶</span>`;
+const blocks = processContent(data.content);
+            rightContent.innerHTML = '';
+            const disclaimers = [];
+            
+            const colorClasses = ['block-1', 'block-2', 'block-3', 'block-4'];
+            let colorIndex = 0;
+            
+            blocks.forEach(block => {
+                const blockClass = colorClasses[colorIndex % colorClasses.length];
+                const blockDiv = document.createElement('div');
+                blockDiv.className = `info-block ${blockClass}`;
+                blockDiv.setAttribute('contenteditable', 'true');
+                blockDiv.setAttribute('data-block-id', blockClass); 
+
+                blockDiv.innerHTML = `<div class="color-edit-btn" onclick="openColorPicker(this, '${blockClass}')" title="換色">🎨</div>`;
+                blockDiv.innerHTML += `<div class="block-header">${block.title}</div>`;
+
+                block.items.forEach(itemLine => {
+                    const row = document.createElement('div');
+                    row.className = 'item-row';
+                    
+                    const dateRegex = /^(\d{1,2}\/\d{1,2}(?:-\d{1,2}\/\d{1,2})?(?:、\d{1,2}\/\d{1,2}(?:-\d{1,2}\/\d{1,2})?)*|每週-\S+|每週[一二三四五六日](?:、[一二三四五六日])*|週[一二三四五六日](?:、[一二三四五六日])*)\s*(.*)/;
+                    const dateMatch = itemLine.match(dateRegex);
+                    
+                    let dateText = '';
+                    let contentText = itemLine;
+                    
+                    if (dateMatch) {
+                        dateText = dateMatch[1];
+                        contentText = dateMatch[2].trim();
+                    }
+                    
+                    let finalContentHTML = contentText;
+
+                        finalContentHTML = finalContentHTML.replace(/(領券折|領券滿|回饋|加碼|現折|享)(.*)$/g, '<span class=\'kw-red\'>$1$2</span>');
+                    finalContentHTML = finalContentHTML.replace(/"([^"]+?)"/g, '<span class="red-text">$1</span>');
+                    finalContentHTML = finalContentHTML.replace(
+                        /\(([^()]+)\)/g,
+                        '<span class="paren-text">($1)</span>'
+                    );
+
+if (dateText) {
+                        row.innerHTML += `<div class="date-badge">${dateText}</div>`;
+                    }
+
+                    row.innerHTML += `<div>${finalContentHTML}</div>`;
+                    blockDiv.appendChild(row);
+                });
+
+
+
+                if (block.disclaimer) {
+                    disclaimers.push(block.disclaimer);
+                }
+rightContent.appendChild(blockDiv);
+                colorIndex++;
+            });
+
+
+            if (disclaimers.length) {
+                const disclaimerDiv = document.createElement('div');
+                disclaimerDiv.className = 'disclaimer-outside';
+                disclaimerDiv.setAttribute('contenteditable', 'true');
+                disclaimerDiv.textContent = '※' + disclaimers.join(' ');
+                rightContent.appendChild(disclaimerDiv);
+            }
+        }
+
+        function renderAllBanks() {
+            const captureArea = document.getElementById('capture-area');
+            const allWrapper = document.getElementById('all-banks-wrapper');
+            if (!allWrapper) return;
+
+            captureArea.style.display = 'none';
+            allWrapper.style.display = 'block';
+            allWrapper.innerHTML = '';
+
+            if (!allBankData || allBankData.length === 0) {
+                allWrapper.innerHTML = '<div style="width:1200px; background:#fff; padding:80px; text-align:center; font-size:24px;">尚未載入任何銀行資料</div>';
+                return;
+            }
+
+            const colorClasses = ['block-1', 'block-2', 'block-3', 'block-4'];
+
+            allBankData.forEach((bank, idx) => {
+                const blocks = processContent(bank.content);
+                const banner = document.createElement('div');
+                banner.className = 'banner-container';
+                banner.setAttribute('data-bank-name', bank.logoName || `銀行_${idx + 1}`);
+
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'content-wrapper';
+
+                const leftSidebar = document.createElement('div');
+                leftSidebar.className = 'left-sidebar';
+
+                const logoBox = document.createElement('div');
+                logoBox.className = 'logo-box';
+
+                const logoInput = document.createElement('input');
+                logoInput.type = 'file';
+                logoInput.accept = 'image/*';
+                logoInput.style.display = 'none';
+                logoInput.addEventListener('change', function() {
+                    handleAllBankManualLogoUpload(this);
+                });
+
+                const editBtn = document.createElement('div');
+                editBtn.className = 'edit-logo-btn';
+                editBtn.textContent = '📷';
+                editBtn.title = '手動更換 Logo';
+                editBtn.addEventListener('click', function() {
+                    logoInput.click();
+                });
+
+                const logoContainer = document.createElement('div');
+                logoContainer.className = 'logo-img-container';
+
+                const logoImg = document.createElement('img');
+                logoImg.className = 'logo-img';
+                logoImg.alt = 'Logo';
+                logoImg.src = resolveLogoUrlForAll(bank.logoName);
+
+                logoImg.onload = function() {
+                    extractAndSetColorForElement(logoImg, logoBox);
+                };
+
+                logoContainer.appendChild(logoImg);
+                logoBox.appendChild(logoInput);
+                logoBox.appendChild(editBtn);
+                logoBox.appendChild(logoContainer);
+                leftSidebar.appendChild(logoBox);
+
+                const rightContent = document.createElement('div');
+                rightContent.className = 'right-content';
+
+                let colorIndex = 0;
+                const disclaimers = [];
+
+                blocks.forEach(block => {
+                    const blockClass = colorClasses[colorIndex % colorClasses.length];
+                    const blockDiv = document.createElement('div');
+                    blockDiv.className = `info-block ${blockClass}`;
+                    blockDiv.setAttribute('contenteditable', 'true');
+
+                    blockDiv.innerHTML = `<div class="color-edit-btn" onclick="openColorPickerSelf(this)" title="換色">🎨</div>`;
+                    blockDiv.innerHTML += `<div class="block-header">${block.title}</div>`;
+
+                    block.items.forEach(itemLine => {
+                        const row = document.createElement('div');
+                        row.className = 'item-row';
+                        
+                        const dateRegex = /^(\d{1,2}\/\d{1,2}(?:-\d{1,2}\/\d{1,2})?(?:、\d{1,2}\/\d{1,2}(?:-\d{1,2}\/\d{1,2})?)*|每週-\S+|每週[一二三四五六日](?:、[一二三四五六日])*|週[一二三四五六日](?:、[一二三四五六日])*)\s*(.*)/;
+                        const dateMatch = itemLine.match(dateRegex);
+                        
+                        let dateText = '';
+                        let contentText = itemLine;
+                        
+                        if (dateMatch) {
+                            dateText = dateMatch[1];
+                            contentText = dateMatch[2].trim();
+                        }
+                        
+                        let finalContentHTML = contentText;
+
+                        finalContentHTML = finalContentHTML.replace(/(領券折|領券滿|回饋|加碼|現折|享)(.*)$/g, '<span class=\'kw-red\'>$1$2</span>');
+                        finalContentHTML = finalContentHTML.replace(/"([^"]+?)"/g, '<span class="red-text">$1</span>');
+                        finalContentHTML = finalContentHTML.replace(
+                            /\(([^()]+)\)/g,
+                            '<span class="paren-text">($1)</span>'
+                        );
+if (dateText) {
+                            row.innerHTML += `<div class="date-badge">${dateText}</div>`;
+                        }
+
+                        row.innerHTML += `<div>${finalContentHTML}</div>`;
+                        blockDiv.appendChild(row);
+                    });
+
+                if (disclaimers.length) {
+                    const disclaimerDiv = document.createElement('div');
+                    disclaimerDiv.className = 'disclaimer-outside';
+                    disclaimerDiv.setAttribute('contenteditable', 'true');
+                    disclaimerDiv.textContent = '※' + disclaimers.join(' ');
+                    rightContent.appendChild(disclaimerDiv);
+                }
+
+
+
+                    rightContent.appendChild(blockDiv);
+
+                    if (block.disclaimer) {
+                        disclaimers.push(block.disclaimer);
+                    }
+colorIndex++;
+                });
+
+
+                if (disclaimers.length) {
+                    const disclaimerDiv = document.createElement('div');
+                    disclaimerDiv.className = 'disclaimer-outside';
+                    disclaimerDiv.setAttribute('contenteditable', 'true');
+                    disclaimerDiv.textContent = '※' + disclaimers.join(' ');
+                    rightContent.appendChild(disclaimerDiv);
+                }
+
+                contentWrapper.appendChild(leftSidebar);
+                contentWrapper.appendChild(rightContent);
+
+                const footerWrapper = document.createElement('div');
+                footerWrapper.className = 'footer-wrapper';
+                const footerBar = document.createElement('a');
+                footerBar.href = '#';
+                footerBar.className = 'footer-bar';
+                footerBar.innerHTML = `${(bank.footer && String(bank.footer).trim()) ? bank.footer : '限量/看詳情'} <span class="arrow-icon">▶</span>`;
+footerWrapper.appendChild(footerBar);
+
+                banner.appendChild(contentWrapper);
+                banner.appendChild(footerWrapper);
+
+                allWrapper.appendChild(banner);
+            });
+        }
+
+        function parseXlsxToRecords(workbook) {
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, {
+                header: 1,
+                raw: true
+            });
+
+            const records = [];
+
+            rows.forEach((row, index) => {
+                if (!row || row.length < 4) return;
+
+                const idRaw      = String(row[0] ?? '').trim();
+                const logoRaw    = String(row[1] ?? '').trim();
+                const contentRaw = String(row[2] ?? '').trim();
+                const footerRaw  = String(row[3] ?? '').trim();
+
+                if (!idRaw) return;
+
+                const firstLine = logoRaw.split(/\r?\n/)[0].trim();
+                const logoName  = firstLine;
+
+                const content = contentRaw;
+                let footer = footerRaw.replace(/^['\"]|['\"]$/g, '').trim();
+
+                if (!footer) footer = '限量/看詳情';
+records.push({
+                    id: idRaw,
+                    logoName,
+                    content,
+                    footer
+                });
+            });
+
+            if (records.length === 0) {
+                alert("XLSX 工單資料為空或格式不符合（至少需要 A~D 四欄）。");
+            }
+
+            return records;
+        }
+
+        function parseCsvToRecords(csvText) {
+            const records = [];
+            const lines = csvText.split(/\r?\n/);
+
+            lines.forEach((line, idx) => {
+                if (!line.trim()) return;
+                const cols = [];
+                let col = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const ch = line[i];
+                    if (ch === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (ch === ',' && !inQuotes) {
+                        cols.push(col);
+                        col = '';
+                    } else {
+                        col += ch;
+                    }
+                }
+                cols.push(col);
+
+                if (cols.length < 4) return;
+
+                const idRaw      = cols[0].trim();
+                const logoRaw    = cols[1].trim();
+                const contentRaw = cols[2].trim();
+                const footerRaw  = cols[3].trim();
+
+                if (!idRaw) return;
+
+                const firstLine = logoRaw.split(/\r?\n/)[0].trim();
+                const logoName  = firstLine;
+
+                const content = contentRaw;
+                let footer = footerRaw.replace(/^['\"]|['\"]$/g, '').trim();
+
+                if (!footer) footer = '限量/看詳情';
+records.push({ id: idRaw, logoName, content, footer });
+            });
+
+            return records;
+        }
+
+        function handleFile(file) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const data = e.target.result;
+                
+                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                    try {
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        allBankData = parseXlsxToRecords(workbook);
+                    } catch (err) {
+                        alert("讀取 XLSX 檔案錯誤：" + err.message);
+                        return;
+                    }
+                } else if (file.name.endsWith('.csv')) {
+                    const text = typeof data === 'string' ? data : new TextDecoder('utf-8').decode(data);
+                    allBankData = parseCsvToRecords(text);
+                } else {
+                    alert("不支援的檔案格式，請上傳 XLSX / XLS / CSV。");
+                    return;
+                }
+
+                if (allBankData.length > 0) {
+                populateBankSelector(allBankData);
+                const selector = document.getElementById('bank-selector');
+                if (selector) {
+                    selector.value = allBankData[0].id;
+                }
+                loadBankData(allBankData[0].id);
+                hasWorkOrder = true;
+                showToast('已載入工單，共 ' + allBankData.length + ' 筆', 'success');
+            } else {
+                    alert("工單資料解析失敗，請確認 A~D 四欄資料是否存在。");
+                }
+            };
+            
+            if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.readAsText(file, 'UTF-8');
+            }
+        }
+
+        function populateBankSelector(data) {
+            const selector = document.getElementById('bank-selector');
+            selector.innerHTML = '';
+
+            const allOption = document.createElement('option');
+            allOption.value = '__ALL__';
+            allOption.textContent = '全部銀行';
+            selector.appendChild(allOption);
+            
+            data.forEach(bank => {
+                const option = document.createElement('option');
+                option.value = bank.id;
+                option.textContent = bank.logoName;
+                selector.appendChild(option);
+            });
+        }
+
+        function onBankSelectorChange(val) {
+            loadBankData(val);
+        }
+
+        function loadBankData(bankId) {
+            if (!bankId) return;
+
+            if (bankId === '__ALL__') {
+                renderAllBanks();
+                return;
+            }
+
+            const selectedBank = allBankData.find(bank => bank.id === bankId);
+            if (selectedBank) {
+                renderBanner(selectedBank);
+            }
+        }
+
+        document.getElementById('fileInput').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+
+
+document.getElementById('workOrderFolderInput').addEventListener('change', (event) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+        handleWorkOrderFolderFiles(files, false);
+    }
+});
+
+        document.getElementById('logoFolderInput').addEventListener('change', (event) => {
+            const files = event.target.files;
+            if (files && files.length > 0) {
+                handleLogoFolderFiles(files);
+            }
+        });
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            applyEditorScale();
+
+            allBankData = parseCsvToRecords(RAW_CSV_CONTENT);
+            if (allBankData.length > 0) {
+                populateBankSelector(allBankData);
+                const selector = document.getElementById('bank-selector');
+                if (selector) selector.value = allBankData[0].id;
+                loadBankData(allBankData[0].id);
+            }
+        });
+    
+// === 強制只吃「LOGO方」資料夾內的圖片（寫死規則） ===
+function isLogoFangFile(file, relativePath) {
+  // relativePath 來自 webkitRelativePath 或自行組合的路徑
+  const path = relativePath || file.name || "";
+  return path.includes("LOGO方/") && !path.includes("LOGO橫/") && !path.includes("程式檔案\\LOGO橫") && !path.includes("程式檔案/LOGO橫");
+}
+
+</script>
+</body>
+</html>
