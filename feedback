@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1000">
+    <title>信用卡回饋方案</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+function updateRowGap() {
+    const g = document.getElementById('row-gap-input').value || 20;
+    document.documentElement.style.setProperty('--row-gap', g + 'px');
+}
+
+</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+function updateRowGap() {
+    const g = document.getElementById('row-gap-input').value || 20;
+    document.documentElement.style.setProperty('--row-gap', g + 'px');
+}
+
+</script>
+
+    <style>
+        /* --- 字體設定 --- */
+        @font-face {
+            font-family: 'ShopeeBold';
+            src: url('./程式檔案/ShopeeNotoSans(content)-Bold.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'ShopeeMedium';
+            src: url('./程式檔案/ShopeeNotoSans(content)-Medium.ttf') format('truetype');
+        }
+        @font-face {
+            font-family: 'ShopeeRegular';
+            src: url('./程式檔案/ShopeeNotoSans(content)-Regular.ttf') format('truetype');
+        }
+
+        :root {
+            --row-gap: 10px;
+            --title-size: 83px;
+            --date-size: 35px;
+            --content-size: 25px;
+            --note-size: 29px;
+
+            --highlight-red: #E60012;
+            --content-text-color: #000000;
+
+            --card-w: 304px;
+            --card-h: 350px;
+            --card-radius: 7px; /* 再少10% */
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            background-color: #555;
+            margin: 0;
+            padding: 80px 0 40px;
+            display: flex;
+            justify-content: center;
+            font-family: 'ShopeeRegular';
+        }
+
+        /* 工具列（功能全部保留） */
+        .toolbar {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 60px;
+            background-color: #333;
+            display: flex; align-items: center; justify-content: center;
+            gap: 15px;
+            color: #fff; z-index: 1000;
+            font-family: 'ShopeeMedium';
+        }
+        .tool-btn {
+            padding: 6px 10px;
+            border-radius:4px;
+            border:none;
+            cursor:pointer;
+            color:#fff;
+            height:28px;
+            font-size:14px;
+        }
+        .btn-upload  { background:#ff9800; }
+        .btn-select  { background:#3f51b5; }
+        .btn-download{ background:#4caf50; }
+
+        .input-group {
+            display:flex;
+            align-items:center;
+            gap:4px;
+        }
+        .input-group label {
+            font-size: 14px;
+            color:#ddd;
+            white-space:nowrap;
+        }
+        .input-group input[type="number"] {
+            padding:5px;
+            border-radius:4px;
+            border:1px solid #666;
+            background:#222;
+            color:#fff;
+            width:55px;
+            text-align:center;
+            font-size:14px;
+        }
+        .input-group input[type="text"] {
+            padding:5px;
+            border-radius:4px;
+            border:1px solid #666;
+            background:#222;
+            color:#fff;
+            width:80px;
+            font-size:14px;
+        }
+        .divider {
+            width:1px;
+            height:30px;
+            background:#666;
+        }
+
+        /* Toast 浮動視窗 */
+        #toast-container {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            min-width: 200px;
+            max-width: 280px;
+            background: rgba(0,0,0,0.85);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            
+        }
+        .toast-success { background: rgba(67,160,71,0.95); }
+        .toast-error { background: rgba(229,57,53,0.95); }
+        .toast-info { background: rgba(66,66,66,0.95); }
+
+        /* ====== 主畫布（1000x1000） ====== */
+        .capture-wrap {
+            width: 1000px;
+            height: 1000px;
+            background-color: #0050c8;
+            padding: 20px 35px 20px;
+            color: #fff;
+        }
+
+        /* ====== 標題 ====== */
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .title-main {
+            font-family: 'ShopeeBold';
+            font-size: var(--title-size);
+            letter-spacing: 1px;
+        }
+        .date-badge {
+            font-family: 'ShopeeBold';
+            font-size: var(--date-size);
+            padding: 8px 18px;
+            background-color: #00348f;
+            border-radius: 12px;
+        }
+
+        /* ====== 卡片區 ====== */
+        .card-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            row-gap: var(--row-gap, 20px); /* 卡片第一排與第二排行距可調 */
+        }
+
+        .card {
+            width: var(--card-w);
+            height: var(--card-h);
+            background: #fff;
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            
+            color:#000;
+        }
+
+        /* ====== logo（固定 290 × 67） ====== */
+        .card-logo-box {
+            width: 290px;
+            height: 67px;
+            margin: 8px auto 6px;
+            border-radius: var(--card-radius);
+            overflow: hidden;
+        
+            border: 1px solid #e0e0e0;
+        }
+        .card-logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-inner {
+            flex: 1;
+            text-align: center;
+            padding: 6px 10px;
+        }
+
+        /* 內文：日期 + 紅字都用 Regular */
+        .line-date {
+            font-family: 'ShopeeRegular';
+            font-size: var(--content-size);
+            margin-bottom: 2px;
+        }
+        .line-text {
+            font-family: 'ShopeeRegular';
+            font-size: var(--content-size);
+            line-height: 1.2;
+            letter-spacing: 0px;
+        }
+        .line-red {
+            font-family: 'ShopeeRegular';
+            color: var(--highlight-red);
+        }
+
+        /* ====== 下方備註 ====== */
+        .footer-note-wrap {
+            margin-top: 20px;
+            text-align: center;
+            font-family: 'ShopeeMedium';
+            font-size: var(--note-size);
+            letter-spacing: 0px;
+            position: relative;
+        }
+        .footer-note-wrap::before,
+        .footer-note-wrap::after {
+            content:"";
+            position:absolute;
+            top:50%; width:150px; height:2px; background:#fff;
+        }
+        .footer-note-wrap::before { left:0; }
+        .footer-note-wrap::after { right:0; }
+    
+        .card-inner {
+            background: #ffffff;
+        }
+        .card-logo-box {
+            background: #ffffff;
+        }
+
+    
+    /* === 浮動 LOG 通知（右上角） === */
+    .floating-tip {
+        position: fixed;
+        top: 8px;
+        right: 8px;
+        z-index: 2000;
+        display: none;
+        background: rgba(255, 87, 34, 0.98);
+        color: #fff;
+        border-radius: 10px;
+        padding: 10px 14px;
+        box-shadow: 0 8px 20px rgba(0,0,0,.25);
+        font-size: 13px;
+        line-height: 1.3;
+        max-width: 320px;
+        backdrop-filter: blur(4px);
+    }
+    .floating-tip .tip-close {
+        position:absolute;
+        top:6px;
+        right:8px;
+        border:none;
+        background:transparent;
+        color:#fff;
+        font-size:16px;
+        cursor:pointer;
+        line-height:1;
+    }
+</style>
+</head>
+<body>
+
+<div id="floatingTip" class="floating-tip" role="status" aria-live="polite">
+  <button class="tip-close" aria-label="關閉提醒" onclick="(function(){var b=document.getElementById('floatingTip'); if(b){ b.style.display='none'; }})();">×</button>
+  <div id="floatingTipMsg">提醒</div>
+</div>
+
+
+<div id="toast-container"></div>
+
+<div class="toolbar">
+    <!-- 字級調整 -->
+    <div class="input-group">
+        <label>標題</label>
+        <input type="number" value="83" min="30" max="140" oninput="updateSize('title', this.value)">
+    </div>
+    <div class="input-group">
+        <label>日期</label>
+        <input type="number" value="35" min="20" max="100" oninput="updateSize('date', this.value)">
+    </div>
+    <div class="input-group">
+        <label>內文</label>
+        <input type="number" value="25" min="16" max="60" oninput="updateSize('content', this.value)">
+    </div>
+    <div class="input-group">
+        <label>備註</label>
+        <input type="number" value="29" min="16" max="60" oninput="updateSize('note', this.value)">
+    </div>
+
+    <div class="divider"></div>
+
+    
+    <!-- 卡片排距 -->
+    <div class="input-group">
+        <label>排距</label>
+        <input type="number" id="row-gap-input" value="10" min="0" max="80" oninput="updateRowGap()">
+    </div>
+
+    <div class="divider"></div>
+<!-- 白底尺寸調整 -->
+    <div class="input-group">
+        <label>白寬</label>
+            <input type="number" id="card-w-input" value="304" min="200" max="400" oninput="updateCardSize()">
+    </div>
+    <div class="input-group">
+        <label>白高</label>
+        <input type="number" id="card-h-input" value="350" min="200" max="500" oninput="updateCardSize()">
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 高亮色 -->
+    <div class="input-group">
+        <label>高亮色</label>
+        <input type="text" id="highlight-hex" value="#E60012" onchange="updateColorVar('--highlight-red', this.value)">
+        <input type="color" id="highlight-picker"
+               style="width:0;height:0;padding:0;border:none;opacity:0;position:absolute;"
+               oninput="updateHexInputAndVar('highlight', this.value)">
+        <button class="tool-btn btn-select" onclick="document.getElementById('highlight-picker').click()">選</button>
+    </div>
+
+    <!-- 內文字色 -->
+    <div class="input-group">
+        <label>內文色</label>
+        <input type="text" id="content-text-hex" value="#000000" onchange="updateColorVar('--content-text-color', this.value)">
+        <input type="color" id="content-picker"
+               style="width:0;height:0;padding:0;border:none;opacity:0;position:absolute;"
+               oninput="updateHexInputAndVar('content-text', this.value)">
+        <button class="tool-btn btn-select" onclick="document.getElementById('content-picker').click()">選</button>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 上傳工單 / 上傳 LOGO -->
+    <input type="file" id="fileInput" accept=".xlsx" style="display:none;">
+    <button class="tool-btn btn-upload" onclick="document.getElementById('fileInput').click()">上傳工單</button>
+
+    <input type="file" id="logoFolderInput" webkitdirectory directory multiple style="display:none;">
+    <button class="tool-btn btn-select" onclick="document.getElementById('logoFolderInput').click()">上傳 LOGO</button>
+
+    <div class="divider"></div>
+
+    <button class="tool-btn btn-download" onclick="downloadImage()">下載 JPG</button>
+</div>
+
+<div id="capture-area" class="capture-wrap">
+
+    <div class="header-row">
+        <div class="title-main" id="title-main" contenteditable="true">信用卡回饋方案</div>
+        <div class="date-badge" id="date-badge" contenteditable="true">9/1 - 9/30</div>
+    </div>
+
+    <div class="card-grid" id="card-grid">
+
+        <!-- 預設 6 張卡，會被 JS 覆寫 -->
+        <div class="card" data-logo-name="">
+            <div class="card-logo-box">
+                <img class="card-logo" src="./logo橫/BANK LOGO.jpg">
+            </div>
+            <div class="card-inner"></div>
+        </div>
+
+        <div class="card" data-logo-name="">
+            <div class="card-logo-box">
+                <img class="card-logo" src="./logo橫/BANK LOGO.jpg">
+            </div>
+            <div class="card-inner"></div>
+        </div>
+
+        <div class="card" data-logo-name="">
+            <div class="card-logo-box">
+                <img class="card-logo" src="./logo橫/BANK LOGO.jpg">
+            </div>
+            <div class="card-inner"></div>
+        </div>
+
+        <div class="card" data-logo-name="">
+            <div class="card-logo-box">
+                <img class="card-logo" src="./logo橫/BANK LOGO.jpg">
+            </div>
+            <div class="card-inner"></div>
+        </div>
+
+        <div class="card" data-logo-name="">
+            <div class="card-logo-box">
+                <img class="card-logo" src="./logo橫/BANK LOGO.jpg">
+            </div>
+            <div class="card-inner"></div>
+        </div>
+
+        <div class="card" data-logo-name="">
+            <div class="card-logo-box">
+                <img class="card-logo" src="./logo橫/BANK LOGO.jpg">
+            </div>
+            <div class="card-inner"></div>
+        </div>
+
+    </div>
+
+    <div class="footer-note-wrap" id="footer-note" contenteditable="true">
+        <div>各活動規範及回饋資格以銀行公告為準</div>
+        <div>詳情請見信用卡活動頁</div>
+    </div>
+
+</div>
+
+<script>
+
+// === 上傳狀態旗標（防呆用） ===
+let hasWorkOrder = false; // 解析工單完成後設為 true
+let hasLogos = false;     // 讀取 LOGO 資料夾後設為 true
+
+function showTip(message, autoHideMs){
+    try{
+        const box = document.getElementById('floatingTip');
+        const msg = document.getElementById('floatingTipMsg');
+        if(!box || !msg) return;
+        msg.textContent = message || '提醒';
+        box.style.display = 'block';
+        if(autoHideMs && autoHideMs > 0){
+            setTimeout(()=>{ box.style.display='none'; }, autoHideMs);
+        }
+    }catch(e){}
+}
+
+/* ===== Toast 浮動視窗 ===== */
+function showToast(message, type) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = 'toast ' + (type === 'success' ? 'toast-success' : type === 'error' ? 'toast-error' : 'toast-info');
+    div.textContent = message;
+    container.appendChild(div);
+    setTimeout(() => {
+        div.style.opacity = '0';
+        div.style.transform = 'translateY(-4px)';
+        div.style.transition = 'opacity 0.3s, transform 0.3s';
+        setTimeout(() => container.removeChild(div), 300);
+    }, 2600);
+}
+
+/* ===== 共用工具 ===== */
+function updateSize(type, val) {
+    let cssVar;
+    if (type === 'title') cssVar = '--title-size';
+    else if (type === 'date') cssVar = '--date-size';
+    else if (type === 'content') cssVar = '--content-size';
+    else if (type === 'note') cssVar = '--note-size';
+    if (cssVar) {
+        document.documentElement.style.setProperty(cssVar, val + 'px');
+    }
+}
+
+function updateCardSize() {
+    const w = document.getElementById('card-w-input').value || 304;
+    const h = document.getElementById('card-h-input').value || 350;
+    document.documentElement.style.setProperty('--card-w', w + 'px');
+    document.documentElement.style.setProperty('--card-h', h + 'px');
+}
+
+function updateColorVar(variableName, colorValue) {
+    const normalizedColor = colorValue.toUpperCase();
+    document.documentElement.style.setProperty(variableName, normalizedColor);
+}
+
+function updateHexInputAndVar(inputIdPrefix, colorValue) {
+    let hexId = '';
+    if (inputIdPrefix === 'highlight') hexId = 'highlight-hex';
+    else if (inputIdPrefix === 'content-text') hexId = 'content-text-hex';
+
+    const hexInput = document.getElementById(hexId);
+    if (hexInput) hexInput.value = colorValue.toUpperCase();
+
+    let variableName;
+    if (inputIdPrefix === 'highlight') variableName = '--highlight-red';
+    else if (inputIdPrefix === 'content-text') variableName = '--content-text-color';
+
+    if (variableName) updateColorVar(variableName, colorValue);
+}
+
+function downloadImage() {
+    const element = document.getElementById('capture-area');
+    const toolbar = document.querySelector('.toolbar');
+    toolbar.style.visibility = 'hidden';
+
+    
+    // ---- 下載前檢查：需同時有工單與 LOGO（即時計算避免時序誤判） ----
+    try {
+        hasLogos = Object.keys(logoMap || {}).length > 0;
+        // hasWorkOrder 在工單成功載入後設為 true；此處不強制推估，僅沿用旗標
+    } catch(e) {}
+    if (!hasWorkOrder || !hasLogos) {
+        showTip('請先上傳工單與 LOGO 後再下載 JPG', 4000);
+        toolbar.style.visibility = 'visible';
+        return;
+    }
+html2canvas(element, {scale:1}).then(canvas=>{
+        const link=document.createElement('a');
+        link.download='信用卡回饋方案.jpg';
+        link.href=canvas.toDataURL('image/jpeg',0.9);
+        link.click();
+        toolbar.style.visibility='visible';
+    });
+}
+
+/* ===== LOGO 資料夾處理（模糊比對） ===== */
+const logoMap = {}; // key: 正規化檔名, value: objectURL
+
+function normalizeName(str) {
+    return (str || '')
+        .toLowerCase()
+        .replace(/\.[^.]+$/,'')                     // 去副檔名
+        .replace(/[ \t\r\n\-_\u3000]/g,'')          // 去空白與常見連接字元
+        .replace(/[()（）\[\]【】「」]/g,'');       // 去括號類
+}
+
+document.getElementById('logoFolderInput').addEventListener('change', function(e) {
+    const files = e.target.files;
+    let count = 0;
+    for (const f of files) {
+        if (!f.type.startsWith('image/')) continue;
+        const key = normalizeName(f.name);
+        const url = URL.createObjectURL(f);
+        logoMap[key] = url;
+        count++;
+    }
+    if (count > 0) {
+        showToast('已載入 LOGO 共 ' + count + ' 張', 'success');
+    } else {
+        showToast('未偵測到圖片檔，請確認資料夾內容', 'error');
+    }
+
+    // 重新套用 LOGO（即使先上傳工單、後上傳 LOGO 也會更新）
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        const name = card.dataset.logoName || '';
+        const img = card.querySelector('.card-logo');
+        if (img) img.src = findLogoSrc(name);
+    
+    hasLogos = Object.keys(logoMap || {}).length > 0;
+});});
+
+function findLogoSrc(bankName) {
+    const baseDefault = './logo橫/BANK LOGO.jpg';
+    const norm = normalizeName(bankName);
+    if (!norm) return baseDefault;
+
+    let bestKey = null;
+    let bestScore = 0;
+
+    for (const key in logoMap) {
+        if (!logoMap.hasOwnProperty(key)) continue;
+        let score = 0;
+        if (key === norm) score = 3;
+        else if (key.includes(norm) || norm.includes(key)) score = 2;
+        if (score > bestScore) {
+            bestScore = score;
+            bestKey = key;
+        }
+    }
+    return bestKey ? logoMap[bestKey] : baseDefault;
+}
+
+/* ===== 工單上傳 / 解析 XLSX ===== */
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        const data = new Uint8Array(evt.target.result);
+        let workbook;
+        try {
+            workbook = XLSX.read(data, { type: 'array' });
+        } catch (err) {
+            showToast('XLSX 解析失敗：' + err.message, 'error');
+            return;
+        }
+
+        const sheetName = '信用卡回饋方案';
+        const sheet = workbook.Sheets[sheetName];
+        if (!sheet) {
+            showToast('找不到工作表「信用卡回饋方案」', 'error');
+            return;
+        }
+
+        function cell(addr) {
+            const c = sheet[addr];
+            return c ? String(c.v) : '';
+        }
+
+        // 標題 A1
+        const a1 = cell('A1');
+        if (a1) {
+            document.getElementById('title-main').textContent = a1;
+        }
+
+        // 日期 C1
+        const c1 = cell('C1');
+        if (c1) {
+            document.getElementById('date-badge').textContent = c1;
+        }
+
+        // 備註改 A8
+        const note = cell('A8');
+        if (note) {
+            const footer = document.getElementById('footer-note');
+            footer.innerHTML = note.replace(/\r?\n/g, '<br>');
+        }
+
+        // 6 格內文 & logo 映射
+        // 文字：第一排 A3斷一行+A4、B3+A4、C3+C4；第二排 A6+A7、B6+B7、C6+C7
+        const textPairs = [
+            ['A3','A4'],
+            ['B3','B4'],
+            ['C3','C4'],
+            ['A6','A7'],
+            ['B6','B7'],
+            ['C6','C7']
+        ];
+        // 圖片名稱：第一排 A2,B2,C2；第二排 A6,B6,C6
+
+const logoAddrs = ['A2','B2','C2','A5','B5','C5'];
+
+        const cards = document.querySelectorAll('.card');
+        cards.forEach((card, idx) => {
+            const pair = textPairs[idx] || [];
+            const lAddr = logoAddrs[idx];
+            const parts = pair.map(addr => addr ? cell(addr) : '').filter(Boolean);
+            const textVal = parts.join('\n');
+            const logoName = lAddr ? cell(lAddr) : '';
+            applyCardContent(card, logoName, textVal);
+        });
+
+        hasWorkOrder = true;
+        showToast('工單載入完成', 'success');
+    };
+    reader.readAsArrayBuffer(file);
+});
+
+// 套用一格的 logo + 內文
+function applyCardContent(cardElem, logoName, cellText) {
+    const logoImg = cardElem.querySelector('.card-logo');
+    const inner = cardElem.querySelector('.card-inner');
+    inner.innerHTML = '';
+
+    // 存下 logo 名稱供之後重新套用
+    cardElem.dataset.logoName = logoName || '';
+
+    // LOGO：模糊比對圖片檔名
+    if (logoImg) {
+        logoImg.src = findLogoSrc(logoName);
+    }
+
+    if (cellText === null || cellText === undefined) return;
+
+    // 內文支援 Excel 斷行（Alt+Enter）：會是 \r\n 或 \n，都會被 split，完全忠實保留空行
+    const lines = String(cellText).split(/\r?\n/);
+
+    lines.forEach(line => {
+        const div = document.createElement('div');
+        div.className = 'line-text';
+        div.contentEditable = 'true';
+
+        // 日期行目前不加額外間距（已取消第二段日期額外 px 的需求）
+        if (/^\s*\d{1,2}\/\d{1,2}/.test(line)) {
+            div.style.marginTop = '0px';
+        }
+
+        // 框起來的部分變紅字：支援 「」 / 【】 / " "
+        let html = line;
+        html = html.replace(/「([^「」]+)」/g, '<span class="line-red">$1</span>');
+        html = html.replace(/【([^【】]+)】/g, '<span class="line-red">$1</span>');
+        html = html.replace(/"([^"]+)"/g, '<span class="line-red">$1</span>');
+
+        div.innerHTML = html;
+        inner.appendChild(div);
+    });
+}
+
+function updateRowGap() {
+    const g = document.getElementById('row-gap-input').value || 20;
+    document.documentElement.style.setProperty('--row-gap', g + 'px');
+}
+
+</script>
+
+</body>
+</html>
