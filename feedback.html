@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1000">
-    <title>信用卡回饋方案</title>
+    <title>信用卡回饋方案v1.1</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
 function updateRowGap() {
@@ -231,6 +231,10 @@ function updateRowGap() {
         .line-red {
             font-family: 'ShopeeRegular';
             color: var(--highlight-red);
+        }
+
+                .line-gray {
+            color: #868584;
         }
 
         /* ====== 下方備註 ====== */
@@ -732,6 +736,16 @@ function applyCardContent(cardElem, logoName, cellText) {
         // 1) 框起來的部分變紅字：支援 「」 / 【】 / " "
         // 2) 內文若出現「回饋」，從「回饋」（包含）之後全部變紅
         let raw = line;
+
+        // 3) 若整行以 ( 開頭且以 ) 結尾，整段（含括號）改為灰字
+        const t = String(raw).trim();
+        if (t.startsWith('(') && t.endsWith(')') && t.length >= 2) {
+            div.classList.add('line-gray');
+            div.textContent = raw;
+            inner.appendChild(div);
+            return;
+        }
+
 
         // 觸發字：遇到「回饋」或「享」其後（包含觸發字）皆為紅字，取最早出現的位置
         const idx1 = raw.indexOf('回饋');
