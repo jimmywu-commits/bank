@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1200">
-    <title>銀行刷卡回饋</title>
+    <title>銀行刷卡回饋Banner v1.1</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
@@ -163,7 +163,7 @@
 
         .info-block {
             border-radius: 6px;
-            padding: 20px 25px; 
+            padding: 16px 18px; 
             position: relative;
         }
 
@@ -206,7 +206,7 @@
         .date-badge {
             background-color: #231815; color: #fff;
             font-size: var(--date-size); font-family: 'ShopeeRegular', sans-serif;
-            margin-left: -25px; 
+            margin-left: -18px; 
             border-top-left-radius: 0; border-bottom-left-radius: 0;
             border-top-right-radius: 30px; border-bottom-right-radius: 30px;
             padding: 4px 18px 4px 10px; 
@@ -223,9 +223,10 @@
             font-family: 'ShopeeMedium', sans-serif; 
         }
 
-        /* 括號內文字固定 30px */
+        /* 括號內文字固定 30px（含括號符號） */
         .paren-text {
             font-size: 30px;
+            color: #868584;
         }
         
         .block-1 { background-color: #dcf0ff; }
@@ -315,13 +316,21 @@
         cursor:pointer;
         line-height:1;
     }
+
+    .floating-tip .tip-grey {
+        color: #868584;
+        margin-left: 8px;
+        font-size: 12px;
+        display: inline-block;
+    }
+
 </style>
 </head>
 <body>
 
 <div id="floatingTip" class="floating-tip" role="status" aria-live="polite">
   <button class="tip-close" aria-label="關閉提醒" onclick="(function(){var b=document.getElementById('floatingTip'); if(b){ b.style.display='none'; }})();">×</button>
-  <div id="floatingTipMsg">提醒</div>
+  <div><span id="floatingTipMsg">提醒</span><span id="floatingTipGrey" class="tip-grey">（輔助說明）</span></div>
 </div>
 
 
@@ -329,16 +338,6 @@
     <div id="toast-container"></div>
 
     <div class="toolbar">
-        <div class="input-group">
-            <select id="page-switcher" class="tool-btn btn-select"
-                style="width:180px;height:28px;background-color:#555;"
-                onchange="onPageSwitch(this.value)">
-                <option value="https://jimmywu-commits.github.io/bank/index.html">信用卡專區</option>
-                <option value="https://jimmywu-commits.github.io/bank/feedback.html">信用卡回饋方案</option>
-            </select>
-        </div>
-        <div class="divider"></div>
-
         <div class="input-group" style="display:none;">
             <label>標題 px</label>
             <input type="number" value="42" min="20" max="80" oninput="updateSize('title', this.value)">
@@ -405,6 +404,8 @@
         </select>
         
         <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#c00000')" style="background-color:#c00000;">換紅色</button>
+        <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#868584')" style="background-color:#868584;">換灰色</button>
+
         <button class="tool-btn btn-download" onclick="downloadImage()">下載 JPG</button>
     </div>
 
@@ -459,6 +460,37 @@
 // === 上傳狀態旗標（防呆用） ===
 let hasWorkOrder = false; // 解析工單完成後設為 true
 let hasLogos = false;     // 讀取 LOGO 資料夾後設為 true
+
+
+function setFloatingTipText(which){
+    try{
+        const box = document.getElementById('floatingTip');
+        const redEl = document.getElementById('floatingTipMsg');
+        const greyEl = document.getElementById('floatingTipGrey');
+        if(!box) return;
+
+        // 取選取文字，沒有就用 prompt
+        let text = '';
+        try{
+            const sel = window.getSelection();
+            if(sel) text = String(sel.toString() || '').trim();
+        }catch(e){}
+
+        if(!text){
+            text = prompt(which === 'grey' ? '請輸入右上灰字內容' : '請輸入右上紅字內容', '');
+            if(text === null) return; // cancel
+            text = String(text).trim();
+        }
+
+        if(which === 'grey'){
+            if(greyEl) greyEl.textContent = text;
+        }else{
+            if(redEl) redEl.textContent = text;
+        }
+
+        box.style.display = 'block';
+    }catch(e){}
+}
 
 function showTip(message, autoHideMs){
     try{
@@ -793,7 +825,7 @@ function openColorPickerSelf(button) {
         }
 
         /* ---- 下載 JPG ---- */
-        function downloadImage() {
+                async function downloadImage() {
             const selector = document.getElementById('bank-selector');
             const mode = selector ? selector.value : null;
 
@@ -820,50 +852,82 @@ function openColorPickerSelf(button) {
                 }
                 return;
             }
+
 if (mode === '__ALL__') {
-                const banners = document.querySelectorAll('#all-banks-wrapper .banner-container');
-                if (!banners.length) {
-                    showToast('目前沒有可下載的銀行 Banner', 'error');
-                    if (wrapper) {
-                        wrapper.style.transform = prevTransform;
-                        wrapper.style.transformOrigin = prevOrigin;
-                    }
-                    return;
-                }
+    const banners = Array.from(document.querySelectorAll('#all-banks-wrapper .banner-container'));
+    if (!banners.length) {
+        showToast('目前沒有可下載的銀行 Banner', 'error');
+        if (wrapper) {
+            wrapper.style.transform = prevTransform;
+            wrapper.style.transformOrigin = prevOrigin;
+        }
+        return;
+    }
 
-                banners.forEach((banner, index) => {
-                    const bankName = banner.getAttribute('data-bank-name') || `銀行_${index + 1}`;
-                    const cleanFileName = bankName.replace(/\s/g, '_');
+    // 若工單資料筆數與畫面張數不一致，先提醒
+    try {
+        const expected = Array.isArray(allBankData) ? allBankData.length : 0;
+        if (expected && expected !== banners.length) {
+            showToast(`提醒：工單筆數 ${expected} 筆，但目前畫面產出 ${banners.length} 張 Banner（仍會以畫面張數下載）`, 'info');
+        }
+    } catch (e) {}
 
-                    const localEditBtns = banner.querySelectorAll('.edit-logo-btn');
-                    const localColorBtns = banner.querySelectorAll('.color-edit-btn');
-                    localEditBtns.forEach(btn => btn.style.display = 'none');
-                    localColorBtns.forEach(btn => btn.style.display = 'none');
+    // 等待某個容器內所有圖片載入完成（避免截圖空白 / 缺圖）
+    function waitForImages(container) {
+        const imgs = Array.from(container.querySelectorAll('img'));
+        if (!imgs.length) return Promise.resolve();
+        return Promise.all(imgs.map(img => new Promise(resolve => {
+            if (img.complete && img.naturalWidth > 0) return resolve();
+            const done = () => { img.removeEventListener('load', done); img.removeEventListener('error', done); resolve(); };
+            img.addEventListener('load', done);
+            img.addEventListener('error', done);
+        })));
+    }
 
-                    html2canvas(banner, { 
-                        scale: 1,
-                        useCORS: true,
-                        allowTaint: true
-                    }).then(canvas => {
-                        const link = document.createElement("a");
-                        link.download = cleanFileName + "_Banner.jpg";
-                        link.href = canvas.toDataURL("image/jpeg", 0.9);
-                        link.click();
+    // 逐張下載：避免同時觸發過多下載導致只下載一部分（尤其 24 張時較常見）
+    for (let index = 0; index < banners.length; index++) {
+        const banner = banners[index];
+        const bankName = banner.getAttribute('data-bank-name') || `銀行_${index + 1}`;
+        const cleanFileName = bankName.replace(/\s/g, '_');
 
-                        localEditBtns.forEach(btn => btn.style.display = '');
-                        localColorBtns.forEach(btn => btn.style.display = '');
-                    });
-                });
+        const localEditBtns = banner.querySelectorAll('.edit-logo-btn');
+        const localColorBtns = banner.querySelectorAll('.color-edit-btn');
+        localEditBtns.forEach(btn => btn.style.display = 'none');
+        localColorBtns.forEach(btn => btn.style.display = 'none');
 
-                setTimeout(() => {
-                    if (wrapper) {
-                        wrapper.style.transform = prevTransform;
-                        wrapper.style.transformOrigin = prevOrigin;
-                    }
-                }, 500);
+        // 確保圖片都載入完再截圖
+        await waitForImages(banner);
 
-                return;
-            }
+        try {
+            const canvas = await html2canvas(banner, { 
+                scale: 1,
+                useCORS: true,
+                allowTaint: true
+            });
+            const link = document.createElement("a");
+            link.download = cleanFileName + "_Banner.jpg";
+            link.href = canvas.toDataURL("image/jpeg", 0.9);
+            link.click();
+            showToast(`下載中：${index + 1}/${banners.length}（${bankName}）`, 'success');
+        } catch (e) {
+            console.warn('[DownloadAll] html2canvas 失敗：', bankName, e);
+            showToast(`截圖失敗：${bankName}`, 'error');
+        } finally {
+            localEditBtns.forEach(btn => btn.style.display = '');
+            localColorBtns.forEach(btn => btn.style.display = '');
+        }
+
+        // 小延遲：讓瀏覽器有時間處理下載佇列（避免被擋/漏下載）
+        await new Promise(r => setTimeout(r, 180));
+    }
+
+    if (wrapper) {
+        wrapper.style.transform = prevTransform;
+        wrapper.style.transformOrigin = prevOrigin;
+    }
+
+    return;
+}
 
             const logoBtn = document.querySelector('#capture-area .edit-logo-btn');
             const colorBtns = document.querySelectorAll('#capture-area .color-edit-btn');
@@ -874,24 +938,26 @@ if (mode === '__ALL__') {
             const element = document.getElementById("capture-area");
             const cleanFileName = (currentBankNameForDownload || '銀行回饋').replace(/\s/g, '_');
             
-            html2canvas(element, { 
-                scale: 1, 
-                useCORS: true,
-                allowTaint: true
-            }).then(canvas => {
-                const link = document.createElement("a");
-                link.download = cleanFileName + "_Banner.jpg";
-                link.href = canvas.toDataURL("image/jpeg", 0.9);
-                link.click();
-                
-                if (logoBtn) logoBtn.style.display = 'flex';
-                colorBtns.forEach(btn => btn.style.display = 'flex');
+try {
+    const canvas = await html2canvas(element, { 
+        scale: 1, 
+        useCORS: true,
+        allowTaint: true
+    });
+    const link = document.createElement("a");
+    link.download = cleanFileName + "_Banner.jpg";
+    link.href = canvas.toDataURL("image/jpeg", 0.9);
+    link.click();
+} finally {
+    if (logoBtn) logoBtn.style.display = 'flex';
+    colorBtns.forEach(btn => btn.style.display = 'flex');
 
-                if (wrapper) {
-                    wrapper.style.transform = prevTransform;
-                    wrapper.style.transformOrigin = prevOrigin;
-                }
-            });
+    if (wrapper) {
+        wrapper.style.transform = prevTransform;
+        wrapper.style.transformOrigin = prevOrigin;
+    }
+}
+
         }
         
         function extractAndSetColorForElement(imgElement, targetBox) {
@@ -1073,6 +1139,13 @@ if (mode === '__ALL__') {
             return FALLBACK_LOGO_PATH;
         }
 
+        function formatDateBadgeText(dateText){
+            // 日期黑底白字（.date-badge）若含 '-'，前後自動補空白
+            // 例：9/1-9/30 → 9/1 - 9/30
+            if (!dateText) return '';
+            return String(dateText).replace(/\s*-\s*/g, ' - ');
+        }
+
         function processContent(contentString) {
             const blocks = [];
             let currentBlock = null;
@@ -1140,7 +1213,7 @@ const blocks = processContent(data.content);
                     const row = document.createElement('div');
                     row.className = 'item-row';
                     
-                    const dateRegex = /^(\d{1,2}\/\d{1,2}(?:-\d{1,2}\/\d{1,2})?(?:、\d{1,2}\/\d{1,2}(?:-\d{1,2}\/\d{1,2})?)*|每週-\S+|每週[一二三四五六日](?:、[一二三四五六日])*|週[一二三四五六日](?:、[一二三四五六日])*)\s*(.*)/;
+                    const dateRegex = /^(\d{1,2}\/\d{1,2}(?:\s*[-－–—]\s*\d{1,2}\/\d{1,2})?(?:、\d{1,2}\/\d{1,2}(?:\s*[-－–—]\s*\d{1,2}\/\d{1,2})?)*|每週[-－–—]\S+|每週[一二三四五六日](?:、[一二三四五六日])*|週[一二三四五六日](?:、[一二三四五六日])*)\s*(.*)/;
                     const dateMatch = itemLine.match(dateRegex);
                     
                     let dateText = '';
@@ -1148,6 +1221,7 @@ const blocks = processContent(data.content);
                     
                     if (dateMatch) {
                         dateText = dateMatch[1];
+                        dateText = formatDateBadgeText(dateText);
                         contentText = dateMatch[2].trim();
                     }
                     
@@ -1271,7 +1345,7 @@ rightContent.appendChild(blockDiv);
                         const row = document.createElement('div');
                         row.className = 'item-row';
                         
-                        const dateRegex = /^(\d{1,2}\/\d{1,2}(?:-\d{1,2}\/\d{1,2})?(?:、\d{1,2}\/\d{1,2}(?:-\d{1,2}\/\d{1,2})?)*|每週-\S+|每週[一二三四五六日](?:、[一二三四五六日])*|週[一二三四五六日](?:、[一二三四五六日])*)\s*(.*)/;
+                        const dateRegex = /^(\d{1,2}\/\d{1,2}(?:\s*[-－–—]\s*\d{1,2}\/\d{1,2})?(?:、\d{1,2}\/\d{1,2}(?:\s*[-－–—]\s*\d{1,2}\/\d{1,2})?)*|每週[-－–—]\S+|每週[一二三四五六日](?:、[一二三四五六日])*|週[一二三四五六日](?:、[一二三四五六日])*)\s*(.*)/;
                         const dateMatch = itemLine.match(dateRegex);
                         
                         let dateText = '';
@@ -1279,6 +1353,7 @@ rightContent.appendChild(blockDiv);
                         
                         if (dateMatch) {
                             dateText = dateMatch[1];
+                            dateText = formatDateBadgeText(dateText);
                             contentText = dateMatch[2].trim();
                         }
                         
@@ -1550,25 +1625,5 @@ function isLogoFangFile(file, relativePath) {
 }
 
 </script>
-
-<script>
-function onPageSwitch(url){
-    if(!url) return;
-    if(window.location.href === url) return;
-    window.location.href = url;
-}
-document.addEventListener('DOMContentLoaded', () => {
-    const s = document.getElementById('page-switcher');
-    if(!s) return;
-    const cur = window.location.href;
-    for(const o of s.options){
-        if(cur.includes(o.value)){
-            s.value = o.value;
-            break;
-        }
-    }
-});
-</script>
-
 </body>
 </html>
