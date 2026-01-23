@@ -20,6 +20,7 @@
         }
 
         :root {
+            --right-content-width: 780px; /* right-content 預設寬度 */
             --bg-color-1: #dcf0ff; 
             --bg-color-2: #fffacf; 
             --bg-color-3: #ffe3cf; 
@@ -32,7 +33,7 @@
 
             --title-size: 42px;   
             --date-size: 30px;    
-            --content-size: 40px; 
+            --content-size: 39px; 
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -111,7 +112,7 @@
         }
 
         .logo-box {
-            width: 100%;
+            width: calc(100% - 10px);
             flex: 1 1 auto;
             min-height: 200px;
             background-color: #fff; 
@@ -122,6 +123,7 @@
             justify-content: center;
             overflow: hidden;
             border: 1px solid #ccc;
+            margin: 0 auto;
         }
         
         .logo-img-container {
@@ -154,8 +156,9 @@
         .edit-logo-btn:hover { background-color: rgba(0,0,0,0.8); }
 
         .right-content {
-            flex-grow: 1;
-            padding: 25px 30px;
+            flex: 0 0 var(--right-content-width);
+            width: var(--right-content-width);
+            padding: 25px 0px 25px 15px;
             display: flex; flex-direction: column;
             gap: 20px; 
             background-color: #fff; 
@@ -351,9 +354,12 @@
             <input type="number" value="40" min="20" max="80" oninput="updateSize('content', this.value)">
         </div>
         
+        
+   
+
         <div class="input-group">
             <label>字級</label>
-            <input type="number" value="40" min="20" max="80" oninput="updateSize('content', this.value)">
+            <input type="number" value="39" min="20" max="80" oninput="updateSize('content', this.value)">
         </div>
 
         
@@ -405,6 +411,7 @@
         
         <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#c00000')" style="background-color:#c00000;">換紅色</button>
         <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#868584')" style="background-color:#868584;">換灰色</button>
+        <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#222222')" style="background-color:#222222;">換黑色</button>
 
         <button class="tool-btn btn-download" onclick="downloadImage()">下載 JPG</button>
     </div>
