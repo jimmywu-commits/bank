@@ -3,9 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1200">
-    <title>銀行刷卡回饋Banner v1.1</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <title>銀行刷卡回饋 Banner - 工單直讀 XLSX 版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js">
+const LOCAL_KEY = 'banner_draft_v4';
+
+function saveAll(){
+  try{
+    const data = {
+      selected: document.getElementById('bank-selector')?.value || '__ALL__',
+      html_single: document.getElementById('capture-area')?.innerHTML || '',
+      html_all: document.getElementById('all-banks-wrapper')?.innerHTML || ''
+    };
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+  }catch(e){console.warn(e);}
+}
+
+function loadAll(){
+  try{
+    const raw = localStorage.getItem(LOCAL_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+
+    const selector = document.getElementById('bank-selector');
+    if(selector && data.selected){
+      const exists = Array.from(selector.options).some(o=>o.value===data.selected);
+      if(exists) selector.value = data.selected;
+    }
+
+    if(data.selected === '__ALL__'){
+      const wrap = document.getElementById('all-banks-wrapper');
+      if(wrap && data.html_all) wrap.innerHTML = data.html_all;
+    }else{
+      const cap = document.getElementById('capture-area');
+      if(cap && data.html_single) cap.innerHTML = data.html_single;
+    }
+  }catch(e){console.warn(e);}
+}
+
+document.addEventListener('input', saveAll);
+document.addEventListener('click', ()=>setTimeout(saveAll,300));
+
+</script>
     
     <style>
         /* --- 字體設定 --- */
@@ -20,11 +60,11 @@
         }
 
         :root {
-            --right-content-width: 780px; /* right-content 預設寬度 */
+            --right-content-width: auto; /* right-content 預設寬度 */
             --bg-color-1: #dcf0ff; 
             --bg-color-2: #fffacf; 
             --bg-color-3: #ffe3cf; 
-            --bg-color-4: #dfe5fe;
+            --bg-color-4: #ffdff3;
             --border-color: #253ac6;
 
             --highlight-red: #cc0000;
@@ -33,7 +73,7 @@
 
             --title-size: 42px;   
             --date-size: 30px;    
-            --content-size: 39px; 
+            --content-size: 38px; 
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -86,39 +126,47 @@
 
         /* --- Banner 本體 --- */
         .banner-container {
-            width: 1200px;
-            background-color: #fff;
-            border: 30px solid var(--border-color);
-            display: flex; flex-direction: column;
-            position: relative;
-            margin-bottom: 30px;
-        }
+    width: 1200px;
+    background-color: #253ac6; /* 外層藍底 */
+    padding: 30px; /* 藍框厚度 */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin-bottom: 30px;
+    box-sizing: border-box;
+}
 
         .content-wrapper {
-            display: flex;
-            width: 100%;
-            align-items: stretch;
-        }
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+    background: #fff;
+    padding: 20px;
+    gap: 20px; /* restore spacing */
+    box-sizing: border-box;
+}
 
         .left-sidebar {
-            width: 330px; 
-            flex-shrink: 0;
+            width: 260px;
+            flex: 0 0 260px;
             background-color: #fff;
-            padding: 25px 0 25px 25px; 
+            padding: 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: stretch;
             justify-content: flex-start;
+            min-height: 0;
+            overflow: hidden;
         }
 
         .logo-box {
-            width: calc(100% - 10px);
-            flex: 1 1 auto;
-            min-height: 200px;
-            background-color: #fff; 
-            border-radius: 6px; 
+            width: 100%;
+            height: auto;
+            min-height: 0;
+            background-color: #fff;
+            border-radius: 6px;
             position: relative;
-            display: flex; 
+            display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
@@ -127,19 +175,22 @@
         }
         
         .logo-img-container {
-            width: 100%; height: 100%;
+            width: 100%;
+            height: 100%;
             display: flex;
-            justify-content: center; 
+            justify-content: center;
             align-items: center;
             padding: 10px;
+            min-height: 0;
         }
         
-        .logo-img { 
-            max-width: 90%; 
-            max-height: 90%; 
+        .logo-img {
+            max-width: 90%;
+            max-height: 90%;
             width: auto;
             height: auto;
             display: block;
+            object-fit: contain;
         }
 
         .logo-text-placeholder {
@@ -156,17 +207,19 @@
         .edit-logo-btn:hover { background-color: rgba(0,0,0,0.8); }
 
         .right-content {
-            flex: 0 0 var(--right-content-width);
-            width: var(--right-content-width);
-            padding: 25px 0px 25px 15px;
-            display: flex; flex-direction: column;
-            gap: 20px; 
-            background-color: #fff; 
+            flex: 1 1 auto;
+            width: auto;
+            min-width: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background-color: #fff;
         }
 
         .info-block {
             border-radius: 6px;
-            padding: 16px 18px; 
+            padding: 16px 10px;
             position: relative;
         }
 
@@ -200,20 +253,53 @@
         }
 
         .item-row {
-            display: flex; align-items: flex-start;
-            margin-bottom: 15px; font-size: var(--content-size);
-            color: var(--content-text-color); 
-            line-height: 1.3; font-family: 'ShopeeMedium', sans-serif;
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            font-size: var(--content-size);
+            color: var(--content-text-color);
+            line-height: 1.3;
+            font-family: 'ShopeeMedium', sans-serif;
+            gap: 14px;
         }
 
         .date-badge {
-            background-color: #231815; color: #fff;
-            font-size: var(--date-size); font-family: 'ShopeeRegular', sans-serif;
-            margin-left: -18px; 
-            border-top-left-radius: 0; border-bottom-left-radius: 0;
-            border-top-right-radius: 30px; border-bottom-right-radius: 30px;
-            padding: 4px 18px 4px 10px; 
-            margin-right: 15px; white-space: nowrap; margin-top: 4px;
+            background-color: #231815;
+            color: #fff;
+            font-size: var(--date-size);
+            font-family: 'ShopeeRegular', sans-serif;
+            margin-left: -10px;
+            margin-right: 0;
+            margin-top: 0;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            border-top-right-radius: 30px;
+            border-bottom-right-radius: 30px;
+            padding: 4px 10px;
+            white-space: nowrap;
+            width: 218px;
+            min-width: 218px;
+            max-width: 218px;
+            flex: 0 0 218px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            text-align: center;
+            line-height: 1.1;
+            outline: none;
+            overflow: hidden;
+        }
+
+        .item-content {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: block;
+            line-height: 1.3;
+            word-break: break-word;
+            white-space: normal;
+            outline: none;
         }
 
         .kw-red { color: #c00000; }
@@ -235,7 +321,7 @@
         .block-1 { background-color: #dcf0ff; }
         .block-2 { background-color: #fffacf; }
         .block-3 { background-color: #ffe3cf; }
-        .block-4 { background-color: #dfe5fe; }
+        .block-4 { background-color: #ffdff3; }
 
         .disclaimer-text {
             font-size: 20px; color: #555; text-align: center;
@@ -257,39 +343,45 @@
 /* ※ 開頭註解：顯示在該組色塊正下方（白底滿版） */
 .disclaimer-outside {
     display: block;
+    width: 100%;
+    max-width: 100%;
     background: #fff;
     color: #555;
-    font-size: 24px; /* 指定 24px */
+    font-size: 24px;
     font-family: 'ShopeeRegular', sans-serif;
     line-height: 1.4;
-
-    /* 白底條緊貼色塊下方 */
-    margin: 5px -30px 7px -30px;
-    padding: 3px 30px 2px 30px;
-
+    margin: 5px 0 7px 0;
+    padding: 3px 0 2px 0;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .footer-wrapper {
-            width: 100%;
-            padding: 0 30px 25px 30px; 
-            background-color: #fff;
-        }
+    width: 100%;
+    padding: 0 20px 20px 20px;
+    background-color: #fff; /* 按鈕所在白框 */
+    box-sizing: border-box;
+}
 
         .footer-bar {
-            background-color: #000; color: #fff;
-            text-align: center; padding: 20px; font-size: 32px;
-            cursor: pointer; display: block; text-decoration: none;
-            font-family: 'ShopeeMedium', sans-serif;
-            border-radius: 6px; 
-        }
+    background-color: #000;
+    color: #fff;
+    text-align: center;
+    padding: 20px;
+    font-size: 35pt;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    font-family: 'ShopeeMedium', sans-serif;
+    border-radius: 6px;
+}
         
         .arrow-icon {
-            font-size: 70%;
-            vertical-align: middle;
-            margin-left: 8px;
-            position: relative; top: -2px;
-        }
+    font-size: 0.7em;
+    line-height: 1;
+}
     
     /* === 浮動 LOG 通知（右上角） === */
     .floating-tip {
@@ -327,6 +419,20 @@
         display: inline-block;
     }
 
+
+.date-pill{width:218px;min-width:218px;max-width:218px;flex:0 0 218px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-align:center;}
+
+.date-tag{width:218px;min-width:218px;max-width:218px;flex:0 0 218px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-align:center;}
+
+.date-label{width:218px;min-width:218px;max-width:218px;flex:0 0 218px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-align:center;}
+
+.date{width:218px;min-width:218px;max-width:218px;flex:0 0 218px;display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-align:center;}
+
+.banner-inner{
+    width: 100%;
+    background: #fff;
+    box-sizing: border-box;
+}
 </style>
 </head>
 <body>
@@ -405,13 +511,13 @@
         
         <div class="divider"></div>
         
-        <select id="bank-selector" class="tool-btn btn-select" onchange="onBankSelectorChange(this.value)" style="width: 180px; height: 28px; background-color: #00bcd4;">
+        <select id="bank-selector" style="display:none;" class="tool-btn btn-select" onchange="onBankSelectorChange(this.value)" style="display:none; height: 28px; background-color: #00bcd4; width:218px; min-width:218px; max-width:218px; flex:0 0 218px; text-align:center; box-sizing:border-box;">
             <option value="" disabled selected>選擇銀行</option>
         </select>
         
-        <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#c00000')" style="background-color:#c00000;">換紅色</button>
-        <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#868584')" style="background-color:#868584;">換灰色</button>
-        <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#222222')" style="background-color:#222222;">換黑色</button>
+        <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#c00000')" style="background-color:#c00000;;width:218px;min-width:218px;max-width:218px;flex:0 0 218px;text-align:center;box-sizing:border-box;">換紅色</button>
+        <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#868584')" style="background-color:#868584;;width:218px;min-width:218px;max-width:218px;flex:0 0 218px;text-align:center;box-sizing:border-box;">換灰色</button>
+        <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#222222')" style="background-color:#222222;;width:218px;min-width:218px;max-width:218px;flex:0 0 218px;text-align:center;box-sizing:border-box;">換黑色</button>
 
         <button class="tool-btn btn-download" onclick="downloadImage()">下載 JPG</button>
     </div>
@@ -421,6 +527,7 @@
 
     <!-- 單一銀行用 Banner（做圖片匯出用） -->
     <div id="capture-area" class="banner-container">
+        <div class="banner-inner">
         
         <div class="content-wrapper">
             <div class="left-sidebar">
@@ -451,9 +558,10 @@
         </div>
 
         <div class="footer-wrapper">
-            <a href="#" class="footer-bar" id="footer-button">
+            <a href="#" class="footer-bar" id="footer-button" contenteditable="true">
                 限量/看詳情 <span class="arrow-icon">▶</span>
             </a>
+        </div>
         </div>
     </div>
 
@@ -463,6 +571,300 @@
     </div> <!-- end of editor-wrapper -->
 
     <script>
+
+function clearBannerDraftOnNewUpload(){
+    try{
+        localStorage.removeItem('banner_draft_v4');
+        localStorage.removeItem('bank_banner_local_draft_v1');
+        localStorage.removeItem('bank_banner_local_draft_v2');
+        localStorage.removeItem('bank_banner_local_draft_v3');
+        localStorage.removeItem('banner_draft_v1');
+        localStorage.removeItem('banner_draft_v2');
+        localStorage.removeItem('banner_draft_v3');
+    }catch(e){
+        console.warn('clearBannerDraftOnNewUpload error', e);
+    }
+}
+
+
+
+
+const LOCAL_DRAFT_KEY = 'bank_banner_local_draft_v2';
+
+function getCurrentSelectedValue(){
+    const selector = document.getElementById('bank-selector');
+    return selector ? (selector.value || '__ALL__') : '__ALL__';
+}
+
+function collectEditsFromScope(scope){
+    const result = {
+        footer: '',
+        disclaimer: '',
+        blocks: []
+    };
+    try{
+        const footer = scope.querySelector('.footer-bar');
+        if(footer) result.footer = footer.innerHTML;
+
+        const infos = Array.from(scope.querySelectorAll('.info-block'));
+        infos.forEach((block) => {
+            const blockObj = {
+                title: '',
+                bgColor: '',
+                items: [],
+            };
+            const header = block.querySelector('.block-header');
+            if(header) blockObj.title = header.innerHTML;
+            blockObj.bgColor = block.style.backgroundColor || '';
+
+            const rows = Array.from(block.querySelectorAll('.item-row'));
+            rows.forEach((row) => {
+                const date = row.querySelector('.date-badge');
+                const content = row.querySelector('.item-content');
+                blockObj.items.push({
+                    date: date ? date.innerHTML : '',
+                    content: content ? content.innerHTML : ''
+                });
+            });
+
+            result.blocks.push(blockObj);
+        });
+
+        const disclaimer = scope.querySelector('.disclaimer-outside');
+        if(disclaimer) result.disclaimer = disclaimer.innerHTML;
+    }catch(e){
+        console.warn('collectEditsFromScope error', e);
+    }
+    return result;
+}
+
+function serializeCurrentState(){
+    try{
+        const selector = document.getElementById('bank-selector');
+        const selectedValue = selector ? (selector.value || '__ALL__') : '__ALL__';
+
+        const state = {
+            selectedValue,
+            sourceBankData: Array.isArray(allBankData) ? allBankData : [],
+            perBankEdits: {}
+        };
+
+        // Save single current capture area under current selected bank
+        const capture = document.getElementById('capture-area');
+        if(capture && selectedValue && selectedValue !== '__ALL__'){
+            state.perBankEdits[selectedValue] = collectEditsFromScope(capture);
+        }
+
+        // Save all-banks cards if present
+        const allWrap = document.getElementById('all-banks-wrapper');
+        if(allWrap){
+            const banners = Array.from(allWrap.querySelectorAll('.banner-container'));
+            banners.forEach((banner) => {
+                const bankName = banner.getAttribute('data-bank-name') || '';
+                const bank = Array.isArray(allBankData) ? allBankData.find(x => (x.logoName || '') === bankName) : null;
+                const key = bank ? bank.id : bankName;
+                if(key){
+                    state.perBankEdits[key] = collectEditsFromScope(banner);
+                }
+            });
+        }
+
+        return state;
+    }catch(e){
+        console.warn('serializeCurrentState error', e);
+        return null;
+    }
+}
+
+function saveDraftToLocal(){
+    try{
+        const state = serializeCurrentState();
+        if(!state) return;
+        localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(state));
+    }catch(e){
+        console.warn('saveDraftToLocal error', e);
+    }
+}
+
+function loadDraftFromLocal(){
+    try{
+        const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
+        if(!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return null;
+        if (!Array.isArray(parsed.sourceBankData)) parsed.sourceBankData = [];
+        if (!parsed.perBankEdits || typeof parsed.perBankEdits !== 'object') parsed.perBankEdits = {};
+        return parsed;
+    }catch(e){
+        console.warn('loadDraftFromLocal error', e);
+        return null;
+    }
+}
+
+function applyEditsToScope(scope, saved){
+    try{
+        if(!scope || !saved) return;
+        const infos = Array.from(scope.querySelectorAll('.info-block'));
+        infos.forEach((block, i) => {
+            const savedBlock = (saved.blocks || [])[i];
+            if(!savedBlock) return;
+
+            const header = block.querySelector('.block-header');
+            if(header && typeof savedBlock.title === 'string') header.innerHTML = savedBlock.title;
+            if(savedBlock.bgColor) block.style.backgroundColor = savedBlock.bgColor;
+
+            const rows = Array.from(block.querySelectorAll('.item-row'));
+            rows.forEach((row, j) => {
+                const savedItem = (savedBlock.items || [])[j];
+                if(!savedItem) return;
+
+                const date = row.querySelector('.date-badge');
+                const content = row.querySelector('.item-content');
+                if(date && typeof savedItem.date === 'string') date.innerHTML = savedItem.date;
+                if(content && typeof savedItem.content === 'string') content.innerHTML = savedItem.content;
+            });
+        });
+
+        const disclaimer = scope.querySelector('.disclaimer-outside');
+        if(disclaimer && typeof saved.disclaimer === 'string') disclaimer.innerHTML = saved.disclaimer;
+
+        const footer = scope.querySelector('.footer-bar');
+        if(footer && typeof saved.footer === 'string' && saved.footer) footer.innerHTML = saved.footer;
+    }catch(e){
+        console.warn('applyEditsToScope error', e);
+    }
+}
+
+function applyDraftForCurrentSelection(){
+    try{
+        const draft = loadDraftFromLocal();
+        if(!draft) return;
+
+        const selectedValue = getCurrentSelectedValue();
+
+        if(selectedValue === '__ALL__'){
+            const allWrap = document.getElementById('all-banks-wrapper');
+            const banners = Array.from(allWrap.querySelectorAll('.banner-container'));
+            banners.forEach((banner) => {
+                const bankName = banner.getAttribute('data-bank-name') || '';
+                const bank = Array.isArray(allBankData) ? allBankData.find(x => (x.logoName || '') === bankName) : null;
+                const key = bank ? bank.id : bankName;
+                if(key && draft.perBankEdits && draft.perBankEdits[key]){
+                    applyEditsToScope(banner, draft.perBankEdits[key]);
+                }
+            });
+        } else {
+            const capture = document.getElementById('capture-area');
+            if(draft.perBankEdits && draft.perBankEdits[selectedValue]){
+                applyEditsToScope(capture, draft.perBankEdits[selectedValue]);
+            }
+        }
+
+        syncSidebarHeightToRightContent(document);
+        setupItemContentEditing(document);
+        bindAutosave(document);
+    }catch(e){
+        console.warn('applyDraftForCurrentSelection error', e);
+    }
+}
+
+function restoreSelectorFromDraft(){
+    try{
+        const draft = loadDraftFromLocal();
+        if(!draft || !draft.selectedValue) return false;
+        const selector = document.getElementById('bank-selector');
+        if(!selector) return false;
+        const hasOption = Array.from(selector.options).some(opt => opt.value === draft.selectedValue);
+        if(!hasOption) return false;
+        selector.value = draft.selectedValue;
+        return true;
+    }catch(e){
+        console.warn('restoreSelectorFromDraft error', e);
+        return false;
+    }
+}
+
+function bindAutosave(scope){
+    try{
+        const root = scope || document;
+        const editableNodes = root.querySelectorAll('.date-badge[contenteditable], .item-content[contenteditable], .block-header[contenteditable], .disclaimer-outside[contenteditable], .footer-bar[contenteditable]');
+        editableNodes.forEach((node) => {
+            if(node.dataset.autosaveBound === '1') return;
+            node.dataset.autosaveBound = '1';
+            node.addEventListener('input', function(){
+                saveDraftToLocal();
+                syncSidebarHeightToRightContent(document);
+            });
+            node.addEventListener('blur', saveDraftToLocal);
+        });
+    }catch(e){
+        console.warn('bindAutosave error', e);
+    }
+}
+
+
+
+
+function setupItemContentEditing(scope){
+    try{
+        const root = scope || document;
+        const editableNodes = root.querySelectorAll('.date-badge[contenteditable="true"], .item-content[contenteditable="true"], .block-header[contenteditable], .disclaimer-outside[contenteditable]');
+        editableNodes.forEach(function(node){
+            if (node.dataset.editBound === '1') return;
+            node.dataset.editBound = '1';
+
+            node.addEventListener('keydown', function(e){
+                if (e.key === 'Enter') {
+                    // Keep line breaks inside the same editable column instead of creating new block structure
+                    e.preventDefault();
+                    try {
+                        document.execCommand('insertLineBreak');
+                    } catch(err) {
+                        document.execCommand('insertHTML', false, '<br>');
+                    }
+                }
+            });
+
+            node.addEventListener('paste', function(e){
+                // Keep pasted content plain to avoid unexpected nested blocks
+                e.preventDefault();
+                const text = (e.clipboardData || window.clipboardData).getData('text');
+                document.execCommand('insertText', false, text);
+            });
+        });
+    }catch(e){
+        console.warn('setupItemContentEditing error', e);
+    }
+}
+
+
+
+function syncSidebarHeightToRightContent(scope){
+    try{
+        const root = scope || document;
+        const wrappers = root.querySelectorAll('.content-wrapper');
+        wrappers.forEach(function(wrapper){
+            const left = wrapper.querySelector('.left-sidebar');
+            const right = wrapper.querySelector('.right-content');
+            const logoBox = wrapper.querySelector('.logo-box');
+            if(!left || !right || !logoBox) return;
+
+            // reset first
+            left.style.height = 'auto';
+            logoBox.style.height = 'auto';
+
+            const rightHeight = Math.ceil(right.offsetHeight);
+            if(rightHeight > 0){
+                left.style.height = rightHeight + 'px';
+                logoBox.style.height = rightHeight + 'px';
+            }
+        });
+    }catch(e){
+        console.warn('syncSidebarHeightToRightContent error', e);
+    }
+}
+
+
         
 // === 上傳狀態旗標（防呆用） ===
 let hasWorkOrder = false; // 解析工單完成後設為 true
@@ -527,7 +929,10 @@ async function triggerWorkOrderWithImages() {
         }
     }
     const input = document.getElementById('workOrderFolderInput');
-    if (input) input.click();
+    if (input) {
+        input.value = '';
+        input.click();
+    }
 }
 
 async function pickWorkOrderDirectoryViaFSAccess() {
@@ -813,6 +1218,7 @@ function openColorPickerSelf(button) {
         function applyColorChange(colorValue) {
             if (currentTargetBlock) {
                 currentTargetBlock.style.backgroundColor = colorValue;
+                saveDraftToLocal();
             }
         }
         
@@ -1064,6 +1470,9 @@ try {
 
                     imgElement.onload = function () {
                         extractAndSetColor(imgElement);
+                        syncSidebarHeightToRightContent(document.getElementById('capture-area'));
+            setupItemContentEditing(document.getElementById('capture-area'));
+            bindAutosave(document.getElementById('capture-area'));
                         showToast(`已從 LOGO 資料夾載入：${matchedKey}`, 'success');
                     };
                     imgElement.onerror = function () {
@@ -1210,11 +1619,11 @@ const blocks = processContent(data.content);
                 const blockClass = colorClasses[colorIndex % colorClasses.length];
                 const blockDiv = document.createElement('div');
                 blockDiv.className = `info-block ${blockClass}`;
-                blockDiv.setAttribute('contenteditable', 'true');
+                // blockDiv is no longer contenteditable; edit specific regions only.
                 blockDiv.setAttribute('data-block-id', blockClass); 
 
                 blockDiv.innerHTML = `<div class="color-edit-btn" onclick="openColorPicker(this, '${blockClass}')" title="換色">🎨</div>`;
-                blockDiv.innerHTML += `<div class="block-header">${block.title}</div>`;
+                blockDiv.innerHTML += `<div class="block-header" contenteditable="plaintext-only">${block.title}</div>`;
 
                 block.items.forEach(itemLine => {
                     const row = document.createElement('div');
@@ -1242,10 +1651,10 @@ const blocks = processContent(data.content);
                     );
 
 if (dateText) {
-                        row.innerHTML += `<div class="date-badge">${dateText}</div>`;
+                        row.innerHTML += `<div class="date-badge" contenteditable="true">${dateText}</div>`;
                     }
 
-                    row.innerHTML += `<div>${finalContentHTML}</div>`;
+                    row.innerHTML += `<div class="item-content" contenteditable="true">${finalContentHTML}</div>`;
                     blockDiv.appendChild(row);
                 });
 
@@ -1262,10 +1671,13 @@ rightContent.appendChild(blockDiv);
             if (disclaimers.length) {
                 const disclaimerDiv = document.createElement('div');
                 disclaimerDiv.className = 'disclaimer-outside';
-                disclaimerDiv.setAttribute('contenteditable', 'true');
+                disclaimerDiv.setAttribute('contenteditable', 'plaintext-only');
                 disclaimerDiv.textContent = '※' + disclaimers.join(' ');
                 rightContent.appendChild(disclaimerDiv);
             }
+            syncSidebarHeightToRightContent(document.getElementById('capture-area'));
+            setupItemContentEditing(document.getElementById('capture-area'));
+            bindAutosave(document.getElementById('capture-area'));
         }
 
         function renderAllBanks() {
@@ -1325,6 +1737,9 @@ rightContent.appendChild(blockDiv);
 
                 logoImg.onload = function() {
                     extractAndSetColorForElement(logoImg, logoBox);
+                    syncSidebarHeightToRightContent(banner);
+                setupItemContentEditing(banner);
+                bindAutosave(banner);
                 };
 
                 logoContainer.appendChild(logoImg);
@@ -1343,10 +1758,10 @@ rightContent.appendChild(blockDiv);
                     const blockClass = colorClasses[colorIndex % colorClasses.length];
                     const blockDiv = document.createElement('div');
                     blockDiv.className = `info-block ${blockClass}`;
-                    blockDiv.setAttribute('contenteditable', 'true');
+                    // blockDiv is no longer contenteditable; edit specific regions only.
 
                     blockDiv.innerHTML = `<div class="color-edit-btn" onclick="openColorPickerSelf(this)" title="換色">🎨</div>`;
-                    blockDiv.innerHTML += `<div class="block-header">${block.title}</div>`;
+                    blockDiv.innerHTML += `<div class="block-header" contenteditable="plaintext-only">${block.title}</div>`;
 
                     block.items.forEach(itemLine => {
                         const row = document.createElement('div');
@@ -1373,17 +1788,17 @@ rightContent.appendChild(blockDiv);
                             '<span class="paren-text">($1)</span>'
                         );
 if (dateText) {
-                            row.innerHTML += `<div class="date-badge">${dateText}</div>`;
+                            row.innerHTML += `<div class="date-badge" contenteditable="true">${dateText}</div>`;
                         }
 
-                        row.innerHTML += `<div>${finalContentHTML}</div>`;
+                        row.innerHTML += `<div class="item-content" contenteditable="true">${finalContentHTML}</div>`;
                         blockDiv.appendChild(row);
                     });
 
                 if (disclaimers.length) {
                     const disclaimerDiv = document.createElement('div');
                     disclaimerDiv.className = 'disclaimer-outside';
-                    disclaimerDiv.setAttribute('contenteditable', 'true');
+                    disclaimerDiv.setAttribute('contenteditable', 'plaintext-only');
                     disclaimerDiv.textContent = '※' + disclaimers.join(' ');
                     rightContent.appendChild(disclaimerDiv);
                 }
@@ -1402,7 +1817,7 @@ colorIndex++;
                 if (disclaimers.length) {
                     const disclaimerDiv = document.createElement('div');
                     disclaimerDiv.className = 'disclaimer-outside';
-                    disclaimerDiv.setAttribute('contenteditable', 'true');
+                    disclaimerDiv.setAttribute('contenteditable', 'plaintext-only');
                     disclaimerDiv.textContent = '※' + disclaimers.join(' ');
                     rightContent.appendChild(disclaimerDiv);
                 }
@@ -1415,6 +1830,7 @@ colorIndex++;
                 const footerBar = document.createElement('a');
                 footerBar.href = '#';
                 footerBar.className = 'footer-bar';
+                footerBar.setAttribute('contenteditable','true');
                 footerBar.innerHTML = `${(bank.footer && String(bank.footer).trim()) ? bank.footer : '限量/看詳情'} <span class="arrow-icon">▶</span>`;
 footerWrapper.appendChild(footerBar);
 
@@ -1422,6 +1838,9 @@ footerWrapper.appendChild(footerBar);
                 banner.appendChild(footerWrapper);
 
                 allWrapper.appendChild(banner);
+                syncSidebarHeightToRightContent(banner);
+                setupItemContentEditing(banner);
+                bindAutosave(banner);
             });
         }
 
@@ -1516,7 +1935,7 @@ records.push({ id: idRaw, logoName, content, footer });
 
             reader.onload = function(e) {
                 const data = e.target.result;
-                
+
                 if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
                     try {
                         const workbook = XLSX.read(data, { type: 'array' });
@@ -1534,19 +1953,20 @@ records.push({ id: idRaw, logoName, content, footer });
                 }
 
                 if (allBankData.length > 0) {
-                populateBankSelector(allBankData);
-                const selector = document.getElementById('bank-selector');
-                if (selector) {
-                    selector.value = allBankData[0].id;
-                }
-                loadBankData(allBankData[0].id);
-                hasWorkOrder = true;
-                showToast('已載入工單，共 ' + allBankData.length + ' 筆', 'success');
-            } else {
+                    clearBannerDraftOnNewUpload();
+                    populateBankSelector(allBankData);
+                    const selector = document.getElementById('bank-selector');
+                    if (selector) selector.value = '__ALL__';
+                    loadBankData('__ALL__');
+                    hasWorkOrder = true;
+                    try { bindAutosave(document); } catch(e) {}
+                    try { syncSidebarHeightToRightContent(document); } catch(e) {}
+                    showToast('已載入工單，共 ' + allBankData.length + ' 筆', 'success');
+                } else {
                     alert("工單資料解析失敗，請確認 A~D 四欄資料是否存在。");
                 }
             };
-            
+
             if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
                 reader.readAsArrayBuffer(file);
             } else {
@@ -1572,7 +1992,13 @@ records.push({ id: idRaw, logoName, content, footer });
         }
 
         function onBankSelectorChange(val) {
+            try { saveDraftToLocal(); } catch (e) {}
             loadBankData(val);
+            setTimeout(function(){
+                try { applyDraftForCurrentSelection(); } catch (e) {}
+                try { bindAutosave(document); } catch (e) {}
+                try { syncSidebarHeightToRightContent(document); } catch (e) {}
+            }, 0);
         }
 
         function loadBankData(bankId) {
@@ -1612,15 +2038,38 @@ document.getElementById('workOrderFolderInput').addEventListener('change', (even
             }
         });
         
+        window.addEventListener('resize', function(){
+            syncSidebarHeightToRightContent(document);
+                setupItemContentEditing(document);
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             applyEditorScale();
+            bindAutosave(document);
 
-            allBankData = parseCsvToRecords(RAW_CSV_CONTENT);
+            const draft = (typeof loadDraftFromLocal === 'function') ? loadDraftFromLocal() : null;
+            if (draft && Array.isArray(draft.sourceBankData) && draft.sourceBankData.length > 0) {
+                allBankData = draft.sourceBankData;
+                hasWorkOrder = true;
+            } else {
+                allBankData = parseCsvToRecords(RAW_CSV_CONTENT);
+            }
+
             if (allBankData.length > 0) {
                 populateBankSelector(allBankData);
                 const selector = document.getElementById('bank-selector');
-                if (selector) selector.value = allBankData[0].id;
-                loadBankData(allBankData[0].id);
+                let restored = false;
+                if (selector && draft && draft.selectedValue) {
+                    const hasOption = Array.from(selector.options).some(opt => opt.value === draft.selectedValue);
+                    if (hasOption) {
+                        selector.value = draft.selectedValue;
+                        restored = true;
+                    }
+                }
+                if (selector && !restored) selector.value = '__ALL__';
+                loadBankData(selector ? (selector.value || '__ALL__') : '__ALL__');
+                if (draft) applyDraftForCurrentSelection();
+                syncSidebarHeightToRightContent(document);
             }
         });
     
@@ -1630,6 +2079,45 @@ function isLogoFangFile(file, relativePath) {
   const path = relativePath || file.name || "";
   return path.includes("LOGO方/") && !path.includes("LOGO橫/") && !path.includes("程式檔案\\LOGO橫") && !path.includes("程式檔案/LOGO橫");
 }
+
+
+const LOCAL_KEY = 'banner_draft_v4';
+
+function saveAll(){
+  try{
+    const data = {
+      selected: document.getElementById('bank-selector')?.value || '__ALL__',
+      html_single: document.getElementById('capture-area')?.innerHTML || '',
+      html_all: document.getElementById('all-banks-wrapper')?.innerHTML || ''
+    };
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(data));
+  }catch(e){console.warn(e);}
+}
+
+function loadAll(){
+  try{
+    const raw = localStorage.getItem(LOCAL_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+
+    const selector = document.getElementById('bank-selector');
+    if(selector && data.selected){
+      const exists = Array.from(selector.options).some(o=>o.value===data.selected);
+      if(exists) selector.value = data.selected;
+    }
+
+    if(data.selected === '__ALL__'){
+      const wrap = document.getElementById('all-banks-wrapper');
+      if(wrap && data.html_all) wrap.innerHTML = data.html_all;
+    }else{
+      const cap = document.getElementById('capture-area');
+      if(cap && data.html_single) cap.innerHTML = data.html_single;
+    }
+  }catch(e){console.warn(e);}
+}
+
+document.addEventListener('input', saveAll);
+document.addEventListener('click', ()=>setTimeout(saveAll,300));
 
 </script>
 </body>
