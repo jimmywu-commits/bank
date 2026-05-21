@@ -626,6 +626,16 @@ function findLogoSrc(bankName) {
     return bestKey ? logoMap[bestKey] : baseDefault;
 }
 
+function findWorksheetName(workbook, keyword) {
+    if (!workbook || !Array.isArray(workbook.SheetNames)) return null;
+
+    // 先找完全同名；如果工單頁簽有月份前綴，則從左到右找第一個包含關鍵字的頁簽。
+    const exactMatch = workbook.SheetNames.find(name => name === keyword);
+    if (exactMatch) return exactMatch;
+
+    return workbook.SheetNames.find(name => String(name || '').includes(keyword)) || null;
+}
+
 /* ===== 工單上傳 / 解析 XLSX ===== */
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
@@ -642,12 +652,15 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
             return;
         }
 
-        const sheetName = '信用卡回饋方案';
-        const sheet = workbook.Sheets[sheetName];
+        const targetSheetKeyword = '信用卡回饋方案';
+        const sheetName = findWorksheetName(workbook, targetSheetKeyword);
+        const sheet = sheetName ? workbook.Sheets[sheetName] : null;
         if (!sheet) {
-            showToast('找不到工作表「信用卡回饋方案」', 'error');
+            showToast('找不到包含「' + targetSheetKeyword + '」的工作表', 'error');
+            console.warn('可用工作表：', workbook.SheetNames);
             return;
         }
+        showToast('已選用工作表：' + sheetName, 'info');
 
         function cell(addr) {
             const c = sheet[addr];
