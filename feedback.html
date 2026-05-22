@@ -37,10 +37,10 @@ function updateRowGap() {
 
         :root {
             --row-gap: 10px;
-            --title-size: 83px;
-            --date-size: 35px;
+            --title-size: 93.55px;
+            --date-size: 40px;
             --content-size: 25px;
-            --note-size: 29px;
+            --note-size: 36.31px;
 
             --highlight-red: #E60012;
             --content-text-color: #000000;
@@ -71,16 +71,35 @@ function updateRowGap() {
             display: flex; align-items: center; justify-content: center;
             gap: 15px;
             color: #fff; z-index: 1000;
-            font-family: 'ShopeeMedium';
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
         }
         .tool-btn {
-            padding: 6px 10px;
+            box-sizing:border-box;
+            padding:0 12px;
             border-radius:4px;
             border:none;
             cursor:pointer;
             color:#fff;
             height:28px;
+            min-height:28px;
+            line-height:28px;
             font-size:14px;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+            font-weight:700;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+            vertical-align:middle;
+            white-space:nowrap;
+            appearance:none;
+            -webkit-appearance:none;
+        }
+        .tool-btn::before {
+            content:"";
+            height:100%;
+            display:inline-block;
+            vertical-align:middle;
         }
         .btn-upload  { background:#ff9800; }
         .btn-select  { background:#3f51b5; }
@@ -89,6 +108,7 @@ function updateRowGap() {
         .input-group {
             display:flex;
             align-items:center;
+            justify-content:center;
             gap:4px;
         }
         .input-group label {
@@ -159,7 +179,7 @@ function updateRowGap() {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 7px;
         }
         .title-main {
             font-family: 'ShopeeBold';
@@ -213,7 +233,7 @@ function updateRowGap() {
         .card-inner {
             flex: 1;
             text-align: center;
-            padding: 6px 10px;
+            padding: 14px 10px;
         }
 
         /* 內文：日期 + 紅字都用 Regular */
@@ -239,11 +259,12 @@ function updateRowGap() {
 
         /* ====== 下方備註 ====== */
         .footer-note-wrap {
-            margin-top: 20px;
+            margin-top: 17px;
             text-align: center;
             font-family: 'ShopeeMedium';
             font-size: var(--note-size);
             letter-spacing: 0px;
+            line-height: 45px;
             position: relative;
         }
         .footer-note-wrap::before,
@@ -313,9 +334,149 @@ function updateRowGap() {
         /* === 隱藏：字級大小調整（標題/日期/內文/備註） === */
         .font-size-control { display: none !important; }
 
+
+        /* === Logo 編輯器工具 === */
+        .logo-editor-open-btn { background:#607d8b; }
+        .logo-editor-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.72);
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+        .logo-editor-modal.show { display: flex; }
+        .logo-editor-panel {
+            width: min(92vw, 920px);
+            max-height: 92vh;
+            background: #111;
+            color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,.5);
+            overflow: hidden;
+        }
+        .logo-editor-header,
+        .logo-editor-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: #1f1f1f;
+        }
+        .logo-editor-header {
+            justify-content: space-between;
+            font-weight: 700;
+        }
+        .logo-editor-body {
+            padding: 14px;
+        }
+        .logo-editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .logo-editor-toolbar input[type="range"] { width: 160px; }
+        .logo-editor-btn {
+            border: 0;
+            border-radius: 6px;
+            padding: 7px 12px;
+            color: #fff;
+            background: #3f51b5;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+            line-height: 1;
+        }
+        .logo-editor-btn.green { background:#4caf50; }
+        .logo-editor-btn.gray { background:#555; }
+        .logo-editor-btn.red { background:#e53935; }
+        .logo-editor-stage-wrap {
+            width: 100%;
+            max-height: 66vh;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            padding: 12px;
+            border-radius: 10px;
+            background:
+                conic-gradient(#ccc 25%, #fff 0 50%, #ccc 0 75%, #fff 0) 0 0/20px 20px;
+        }
+        #logoEditorCanvas {
+            display: block;
+            width: 760px;
+            height: 420px;
+            max-width: 100%;
+            background: transparent;
+            cursor: grab;
+            border: 1px solid rgba(255,255,255,.35);
+            border-radius: 6px;
+        }
+        #logoEditorCanvas.dragging { cursor: grabbing; }
+        .logo-editor-tip {
+            color: #ddd;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .logo-editor-file {
+            display: none;
+        }
+
+
+        /* === LOGO 歸檔位置浮動視窗 === */
+        .logo-path-float {
+            position: fixed;
+            top: 120px;
+            right: 16px;
+            z-index: 4900;
+            width: 360px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(17,17,17,.92);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(0,0,0,.28);
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .logo-path-float .title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .logo-path-float .path {
+            word-break: break-all;
+            color: #e8e8e8;
+            margin-bottom: 8px;
+        }
+        .logo-path-float button {
+            border: 0;
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: #607d8b;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+        .logo-path-float button:hover { background:#4f6c78; }
+
 </style>
 </head>
 <body>
+
+<div id="logoPathFloat" class="logo-path-float">
+    <div class="title">LOGO歸檔位置：</div>
+    <div id="logoArchivePath" class="path">G:\共用雲端硬碟\INT_TWN_SHP_內部-素材\AI審圖\銀行\程式檔案\LOGO橫</div>
+    <button type="button" onclick="copyLogoArchivePath()">複製路徑</button>
+</div>
+
 
 <div id="floatingTip" class="floating-tip" role="status" aria-live="polite">
   <button class="tip-close" aria-label="關閉提醒" onclick="(function(){var b=document.getElementById('floatingTip'); if(b){ b.style.display='none'; }})();">×</button>
@@ -324,6 +485,40 @@ function updateRowGap() {
 
 
 <div id="toast-container"></div>
+
+
+<div id="logoEditorModal" class="logo-editor-modal" aria-hidden="true">
+    <div class="logo-editor-panel">
+        <div class="logo-editor-header">
+            <div>Logo 編輯器</div>
+            <button type="button" class="logo-editor-btn red" onclick="closeLogoEditorTool()">關閉</button>
+        </div>
+        <div class="logo-editor-body">
+            <div class="logo-editor-toolbar">
+                <input id="logoEditorFile" class="logo-editor-file" type="file" accept="image/*">
+                <button type="button" class="logo-editor-btn" onclick="document.getElementById('logoEditorFile').click()">上傳圖片</button>
+                <button type="button" class="logo-editor-btn gray" onclick="logoEditorFit()">置中適合</button>
+                <button type="button" class="logo-editor-btn gray" onclick="logoEditorZoomStep(-0.05)">－</button>
+                <label>縮放 <input id="logoEditorZoom" type="range" min="10" max="400" value="100" oninput="logoEditorSetZoom(this.value / 100)"></label>
+                <span id="logoEditorZoomText">100%</span>
+                <button type="button" class="logo-editor-btn gray" onclick="logoEditorZoomStep(0.05)">＋</button>
+                <label>裁切框寬 <input id="logoEditorCropW" type="number" value="400" min="50" max="760" oninput="logoEditorSetCrop()"></label>
+                <label>裁切框高 <input id="logoEditorCropH" type="number" value="92" min="30" max="420" oninput="logoEditorSetCrop()"></label>
+            </div>
+            <div class="logo-editor-stage-wrap">
+                <canvas id="logoEditorCanvas" width="760" height="420"></canvas>
+            </div>
+            <div class="logo-editor-tip">
+                操作方式：上傳圖片後，可拖曳圖片位置、滑鼠滾輪或縮放鈕放大縮小；虛線框內為下載裁切範圍。
+            </div>
+        </div>
+        <div class="logo-editor-actions">
+            <button type="button" class="logo-editor-btn green" onclick="downloadEditedLogo()">下載裁切後 JPG</button>
+            <button type="button" class="logo-editor-btn gray" onclick="closeLogoEditorTool()">取消</button>
+        </div>
+    </div>
+</div>
+
 
 <div class="toolbar">
     <!-- 導航下拉：左上角切換頁面 -->
@@ -337,11 +532,11 @@ function updateRowGap() {
     <!-- 字級調整 -->
     <div class="input-group font-size-control">
         <label>標題</label>
-        <input type="number" value="83" min="30" max="140" oninput="updateSize('title', this.value)">
+        <input type="number" value="93.55" min="30" max="140" oninput="updateSize('title', this.value)">
     </div>
     <div class="input-group font-size-control">
         <label>日期</label>
-        <input type="number" value="35" min="20" max="100" oninput="updateSize('date', this.value)">
+        <input type="number" value="40" min="20" max="100" oninput="updateSize('date', this.value)">
     </div>
     <div class="input-group font-size-control">
         <label>內文</label>
@@ -349,7 +544,7 @@ function updateRowGap() {
     </div>
     <div class="input-group font-size-control">
         <label>備註</label>
-        <input type="number" value="29" min="16" max="60" oninput="updateSize('note', this.value)">
+        <input type="number" value="36.31" min="16" max="60" oninput="updateSize('note', this.value)">
     </div>
 
     <div class="divider"></div>
@@ -402,6 +597,7 @@ function updateRowGap() {
 
     <input type="file" id="logoFolderInput" webkitdirectory directory multiple style="display:none;">
     <button class="tool-btn btn-select" onclick="document.getElementById('logoFolderInput').click()">上傳 LOGO</button>
+    <button class="tool-btn btn-select logo-editor-open-btn" onclick="openLogoEditorTool()">logo編輯器</button>
 
     <div class="divider"></div>
 
@@ -789,6 +985,257 @@ function applyCardContent(cardElem, logoName, cellText) {
 function updateRowGap() {
     const g = document.getElementById('row-gap-input').value || 20;
     document.documentElement.style.setProperty('--row-gap', g + 'px');
+}
+
+
+
+/* ===== Logo 編輯器工具：上傳 / 拖曳 / 縮放 / 裁切 / 下載 ===== */
+const logoEditorState = {
+    img: null,
+    imgSrc: '',
+    originalFileName: 'logo_edited',
+    scale: 1,
+    x: 380,
+    y: 210,
+    dragging: false,
+    startX: 0,
+    startY: 0,
+    startImgX: 0,
+    startImgY: 0,
+    cropW: 400,
+    cropH: 92
+};
+
+function openLogoEditorTool() {
+    const modal = document.getElementById('logoEditorModal');
+    if (!modal) return;
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(drawLogoEditor);
+}
+
+function closeLogoEditorTool() {
+    const modal = document.getElementById('logoEditorModal');
+    if (!modal) return;
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function logoEditorCanvas() {
+    return document.getElementById('logoEditorCanvas');
+}
+
+function logoEditorSetCrop() {
+    const w = Number(document.getElementById('logoEditorCropW')?.value || 600);
+    const h = Number(document.getElementById('logoEditorCropH')?.value || 180);
+    const canvas = logoEditorCanvas();
+    logoEditorState.cropW = Math.max(50, Math.min(canvas.width, w));
+    logoEditorState.cropH = Math.max(30, Math.min(canvas.height, h));
+    drawLogoEditor();
+}
+
+function logoEditorSetZoom(scale) {
+    if (!logoEditorState.img) return;
+    const next = Math.max(0.1, Math.min(4, Number(scale) || 1));
+    logoEditorState.scale = next;
+    const slider = document.getElementById('logoEditorZoom');
+    const text = document.getElementById('logoEditorZoomText');
+    if (slider) slider.value = Math.round(next * 100);
+    if (text) text.textContent = Math.round(next * 100) + '%';
+    drawLogoEditor();
+}
+
+function logoEditorZoomStep(step) {
+    logoEditorSetZoom((logoEditorState.scale || 1) + step);
+}
+
+function logoEditorFit() {
+    const canvas = logoEditorCanvas();
+    const img = logoEditorState.img;
+    if (!canvas || !img) return;
+    const cropW = logoEditorState.cropW || 600;
+    const cropH = logoEditorState.cropH || 180;
+    const fit = Math.min(cropW / img.naturalWidth, cropH / img.naturalHeight);
+    logoEditorState.scale = Math.max(0.1, Math.min(4, fit));
+    logoEditorState.x = canvas.width / 2;
+    logoEditorState.y = canvas.height / 2;
+    logoEditorSetZoom(logoEditorState.scale);
+    drawLogoEditor();
+}
+
+function drawLogoEditor(exportMode) {
+    const canvas = logoEditorCanvas();
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const cropW = Math.max(50, Math.min(canvas.width, logoEditorState.cropW || 600));
+    const cropH = Math.max(30, Math.min(canvas.height, logoEditorState.cropH || 180));
+    const cropX = (canvas.width - cropW) / 2;
+    const cropY = (canvas.height - cropH) / 2;
+
+    if (logoEditorState.img) {
+        const img = logoEditorState.img;
+        const w = img.naturalWidth * logoEditorState.scale;
+        const h = img.naturalHeight * logoEditorState.scale;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, logoEditorState.x - w / 2, logoEditorState.y - h / 2, w, h);
+    } else {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,.45)';
+        ctx.font = '20px Arial, "Microsoft JhengHei", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('請先上傳 Logo 圖片', canvas.width / 2, canvas.height / 2);
+        ctx.restore();
+    }
+
+    if (!exportMode) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,.35)';
+        ctx.fillRect(0, 0, canvas.width, cropY);
+        ctx.fillRect(0, cropY + cropH, canvas.width, canvas.height - cropY - cropH);
+        ctx.fillRect(0, cropY, cropX, cropH);
+        ctx.fillRect(cropX + cropW, cropY, canvas.width - cropX - cropW, cropH);
+
+        ctx.strokeStyle = '#00E5FF';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 5]);
+        ctx.strokeRect(cropX, cropY, cropW, cropH);
+
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#00E5FF';
+        ctx.font = '13px Arial, "Microsoft JhengHei", sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillText(`${Math.round(cropW)} × ${Math.round(cropH)} px`, cropX + 8, cropY + 18);
+        ctx.restore();
+    }
+}
+
+function downloadEditedLogo() {
+    const canvas = logoEditorCanvas();
+    const img = logoEditorState.img;
+    if (!canvas || !img) {
+        showToast('請先上傳圖片', 'error');
+        return;
+    }
+
+    const cropW = Math.max(50, Math.min(canvas.width, logoEditorState.cropW || 600));
+    const cropH = Math.max(30, Math.min(canvas.height, logoEditorState.cropH || 180));
+    const cropX = (canvas.width - cropW) / 2;
+    const cropY = (canvas.height - cropH) / 2;
+
+    const output = document.createElement('canvas');
+    output.width = Math.round(cropW);
+    output.height = Math.round(cropH);
+    const octx = output.getContext('2d');
+
+    // JPG white background
+    octx.fillStyle = '#FFFFFF';
+    octx.fillRect(0, 0, output.width, output.height);
+
+    // Re-render image into crop coordinates
+    const w = img.naturalWidth * logoEditorState.scale;
+    const h = img.naturalHeight * logoEditorState.scale;
+    octx.imageSmoothingEnabled = true;
+    octx.imageSmoothingQuality = 'high';
+    octx.drawImage(img, logoEditorState.x - w / 2 - cropX, logoEditorState.y - h / 2 - cropY, w, h);
+
+    const link = document.createElement('a');
+    link.download = (logoEditorState.originalFileName || 'logo_edited') + '.jpg';
+    link.href = output.toDataURL('image/jpeg', 0.95);
+    link.click();
+}
+
+(function initLogoEditorTool(){
+    const input = document.getElementById('logoEditorFile');
+    const canvas = logoEditorCanvas();
+    if (!input || !canvas) return;
+
+    input.addEventListener('change', function(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const img = new Image();
+            img.onload = function() {
+                logoEditorState.img = img;
+                logoEditorState.imgSrc = evt.target.result;
+                logoEditorState.originalFileName = (file.name || 'logo_edited').replace(/\.[^.]+$/, '');
+                logoEditorSetCrop();
+                logoEditorFit();
+                showToast('Logo 已載入，可開始編輯', 'success');
+            };
+            img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+    });
+
+    canvas.addEventListener('mousedown', function(e) {
+        if (!logoEditorState.img) return;
+        const rect = canvas.getBoundingClientRect();
+        logoEditorState.dragging = true;
+        logoEditorState.startX = (e.clientX - rect.left) * (canvas.width / rect.width);
+        logoEditorState.startY = (e.clientY - rect.top) * (canvas.height / rect.height);
+        logoEditorState.startImgX = logoEditorState.x;
+        logoEditorState.startImgY = logoEditorState.y;
+        canvas.classList.add('dragging');
+        e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!logoEditorState.dragging) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+        logoEditorState.x = logoEditorState.startImgX + (x - logoEditorState.startX);
+        logoEditorState.y = logoEditorState.startImgY + (y - logoEditorState.startY);
+        drawLogoEditor();
+    });
+
+    window.addEventListener('mouseup', function() {
+        logoEditorState.dragging = false;
+        canvas.classList.remove('dragging');
+    });
+
+    canvas.addEventListener('wheel', function(e) {
+        if (!logoEditorState.img) return;
+        e.preventDefault();
+        logoEditorZoomStep(e.deltaY < 0 ? 0.05 : -0.05);
+    }, { passive: false });
+
+    drawLogoEditor();
+})();
+
+
+
+function copyLogoArchivePath() {
+    const path = 'G:\\共用雲端硬碟\\INT_TWN_SHP_內部-素材\\AI審圖\\銀行\\程式檔案\\LOGO橫';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(path).then(function() {
+            if (typeof showToast === 'function') showToast('已複製 LOGO 歸檔路徑', 'success');
+            else alert('已複製路徑');
+        }).catch(function() {
+            fallbackCopyLogoArchivePath(path);
+        });
+    } else {
+        fallbackCopyLogoArchivePath(path);
+    }
+}
+
+function fallbackCopyLogoArchivePath(path) {
+    const ta = document.createElement('textarea');
+    ta.value = path;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    if (typeof showToast === 'function') showToast('已複製 LOGO 歸檔路徑', 'success');
+    else alert('已複製路徑');
 }
 
 </script>
