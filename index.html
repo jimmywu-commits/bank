@@ -308,6 +308,14 @@ document.addEventListener('click', ()=>setTimeout(saveAll,300));
             outline: none;
             overflow: visible;
         }
+.info-block.no-date-block .item-row {
+            justify-content: center;
+        }
+
+        .info-block.no-date-block .item-content {
+            text-align: center;
+            flex: 0 1 auto;
+        }
 
         .item-content {
             flex: 1 1 auto;
@@ -2161,6 +2169,11 @@ const blocks = processContent(data.content);
                 const blockClass = colorClasses[colorIndex % colorClasses.length];
                 const blockDiv = document.createElement('div');
                 blockDiv.className = `info-block ${blockClass}`;
+                const blockHasDate = (block.items || []).some(itemLine => {
+                    const dateRegexForBlock = /^(\d{1,2}\/\d{1,2}(?:\s*[-－–—]\s*\d{1,2}\/\d{1,2})?(?:、\d{1,2}\/\d{1,2}(?:\s*[-－–—]\s*\d{1,2}\/\d{1,2})?)*|每週[-－–—]\S+|每週[一二三四五六日](?:、[一二三四五六日])*|週[一二三四五六日](?:、[一二三四五六日])*)\s*(.*)/;
+                    return dateRegexForBlock.test(String(itemLine || '').trim());
+                });
+                if (!blockHasDate) blockDiv.classList.add('no-date-block');
                 // blockDiv is no longer contenteditable; edit specific regions only.
                 blockDiv.setAttribute('data-block-id', blockClass); 
 
@@ -2302,6 +2315,11 @@ rightContent.appendChild(blockDiv);
                     const blockClass = colorClasses[colorIndex % colorClasses.length];
                     const blockDiv = document.createElement('div');
                     blockDiv.className = `info-block ${blockClass}`;
+                    const blockHasDate = (block.items || []).some(itemLine => {
+                        const dateRegexForBlock = /^(\d{1,2}\/\d{1,2}(?:\s*[-－–—]\s*\d{1,2}\/\d{1,2})?(?:、\d{1,2}\/\d{1,2}(?:\s*[-－–—]\s*\d{1,2}\/\d{1,2})?)*|每週[-－–—]\S+|每週[一二三四五六日](?:、[一二三四五六日])*|週[一二三四五六日](?:、[一二三四五六日])*)\s*(.*)/;
+                        return dateRegexForBlock.test(String(itemLine || '').trim());
+                    });
+                    if (!blockHasDate) blockDiv.classList.add('no-date-block');
                     // blockDiv is no longer contenteditable; edit specific regions only.
 
                     blockDiv.innerHTML = `<div class="color-edit-btn" onclick="openColorPickerSelf(this)" title="換色">🎨</div>`;
