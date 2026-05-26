@@ -294,10 +294,10 @@ document.addEventListener('click', ()=>setTimeout(saveAll,300));
             border-bottom-right-radius: 30px;
             padding: 4px 10px;
             white-space: nowrap;
-            width: 218px;
+            width: auto;
             min-width: 218px;
-            max-width: 218px;
-            flex: 0 0 218px;
+            max-width: none;
+            flex: 0 0 auto;
             min-height: 44px;
             display: flex;
             align-items: center;
@@ -306,7 +306,7 @@ document.addEventListener('click', ()=>setTimeout(saveAll,300));
             text-align: center;
             line-height: 1.1;
             outline: none;
-            overflow: hidden;
+            overflow: visible;
         }
 
         .item-content {
@@ -1117,6 +1117,7 @@ function applyDraftForCurrentSelection(){
             }
         }
 
+        syncDateBadgeWidths(document);
         syncSidebarHeightToRightContent(document);
         setupItemContentEditing(document);
         bindAutosave(document);
@@ -1150,6 +1151,7 @@ function bindAutosave(scope){
             node.dataset.autosaveBound = '1';
             node.addEventListener('input', function(){
                 saveDraftToLocal();
+                syncDateBadgeWidths(document);
                 syncSidebarHeightToRightContent(document);
             });
             node.addEventListener('blur', saveDraftToLocal);
@@ -1218,6 +1220,45 @@ function syncSidebarHeightToRightContent(scope){
         });
     }catch(e){
         console.warn('syncSidebarHeightToRightContent error', e);
+    }
+}
+
+
+function syncDateBadgeWidths(scope){
+    try{
+        const root = scope || document;
+        const wrappers = root.querySelectorAll('.content-wrapper');
+        wrappers.forEach(function(wrapper){
+            const badges = Array.from(wrapper.querySelectorAll('.date-badge'));
+            if(!badges.length) return;
+
+            const baseWidth = 218;
+            let maxWidth = baseWidth;
+
+            badges.forEach(function(badge){
+                badge.style.width = 'auto';
+                badge.style.minWidth = baseWidth + 'px';
+                badge.style.maxWidth = 'none';
+                badge.style.flexBasis = 'auto';
+
+                const needed = Math.ceil(Math.max(
+                    badge.scrollWidth || 0,
+                    badge.getBoundingClientRect ? badge.getBoundingClientRect().width : 0,
+                    baseWidth
+                ));
+
+                if(needed > maxWidth) maxWidth = needed;
+            });
+
+            badges.forEach(function(badge){
+                badge.style.width = maxWidth + 'px';
+                badge.style.minWidth = maxWidth + 'px';
+                badge.style.maxWidth = maxWidth + 'px';
+                badge.style.flexBasis = maxWidth + 'px';
+            });
+        });
+    }catch(e){
+        console.warn('syncDateBadgeWidths error', e);
     }
 }
 
@@ -1408,7 +1449,8 @@ let currentTargetBlock = null;
                 if (mode === '__ALL__') {
                     renderAllBanks();
                     try { applyDraftForCurrentSelection(); } catch(e) {}
-                    try { syncSidebarHeightToRightContent(document); } catch(e) {}
+                    try { syncDateBadgeWidths(document);
+        syncSidebarHeightToRightContent(document); } catch(e) {}
                 } else if (currentBankNameForDownload) {
                     loadBankLogo(currentBankNameForDownload);
                 } else if (mode && mode !== '__ALL__' && Array.isArray(allBankData)) {
@@ -1975,7 +2017,8 @@ try {
 
                     imgElement.onload = function () {
                         extractAndSetColor(imgElement);
-                        syncSidebarHeightToRightContent(document.getElementById('capture-area'));
+                        syncDateBadgeWidths(document.getElementById('capture-area'));
+            syncSidebarHeightToRightContent(document.getElementById('capture-area'));
             setupItemContentEditing(document.getElementById('capture-area'));
             bindAutosave(document.getElementById('capture-area'));
                         showToast(`已從 LOGO 資料夾載入：${matchedKey}`, 'success');
@@ -2174,6 +2217,7 @@ rightContent.appendChild(blockDiv);
                 disclaimerDiv.textContent = '※' + disclaimers.join(' ');
                 rightContent.appendChild(disclaimerDiv);
             }
+            syncDateBadgeWidths(document.getElementById('capture-area'));
             syncSidebarHeightToRightContent(document.getElementById('capture-area'));
             setupItemContentEditing(document.getElementById('capture-area'));
             bindAutosave(document.getElementById('capture-area'));
@@ -2236,6 +2280,7 @@ rightContent.appendChild(blockDiv);
 
                 logoImg.onload = function() {
                     extractAndSetColorForElement(logoImg, logoBox);
+                    syncDateBadgeWidths(banner);
                     syncSidebarHeightToRightContent(banner);
                 setupItemContentEditing(banner);
                 bindAutosave(banner);
@@ -2337,7 +2382,8 @@ footerWrapper.appendChild(footerBar);
                 banner.appendChild(footerWrapper);
 
                 allWrapper.appendChild(banner);
-                syncSidebarHeightToRightContent(banner);
+                syncDateBadgeWidths(banner);
+                    syncSidebarHeightToRightContent(banner);
                 setupItemContentEditing(banner);
                 bindAutosave(banner);
             });
@@ -2459,7 +2505,8 @@ records.push({ id: idRaw, logoName, content, footer });
                     loadBankData('__ALL__');
                     hasWorkOrder = true;
                     try { bindAutosave(document); } catch(e) {}
-                    try { syncSidebarHeightToRightContent(document); } catch(e) {}
+                    try { syncDateBadgeWidths(document);
+        syncSidebarHeightToRightContent(document); } catch(e) {}
                     showToast('已載入工單，共 ' + allBankData.length + ' 筆', 'success');
                 } else {
                     alert("工單資料解析失敗，請確認 A~D 四欄資料是否存在。");
@@ -2496,7 +2543,8 @@ records.push({ id: idRaw, logoName, content, footer });
             setTimeout(function(){
                 try { applyDraftForCurrentSelection(); } catch (e) {}
                 try { bindAutosave(document); } catch (e) {}
-                try { syncSidebarHeightToRightContent(document); } catch (e) {}
+                try { syncDateBadgeWidths(document);
+        syncSidebarHeightToRightContent(document); } catch (e) {}
             }, 0);
         }
 
@@ -2547,7 +2595,8 @@ function bindLogoFolderInput() {
 
 
         window.addEventListener('resize', function(){
-            syncSidebarHeightToRightContent(document);
+            syncDateBadgeWidths(document);
+        syncSidebarHeightToRightContent(document);
                 setupItemContentEditing(document);
         });
 
@@ -2578,7 +2627,8 @@ function bindLogoFolderInput() {
                 if (selector && !restored) selector.value = '__ALL__';
                 loadBankData(selector ? (selector.value || '__ALL__') : '__ALL__');
                 if (draft) applyDraftForCurrentSelection();
-                syncSidebarHeightToRightContent(document);
+                syncDateBadgeWidths(document);
+        syncSidebarHeightToRightContent(document);
             }
         });
     
