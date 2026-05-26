@@ -104,9 +104,26 @@ document.addEventListener('click', ()=>setTimeout(saveAll,300));
         .input-group input[type="number"] { width: 45px; }
 
         .tool-btn {
-            padding: 6px 10px; border: none; border-radius: 4px;
-            font-size: 14px; cursor: pointer; font-family: 'ShopeeMedium', sans-serif;
-            color: #fff; height: 28px;
+            box-sizing:border-box;
+            padding:0 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+            font-weight:700;
+            color: #fff;
+            height: 28px;
+            min-height:28px;
+            line-height:28px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            text-align:center;
+            vertical-align:middle;
+            white-space:nowrap;
+            appearance:none;
+            -webkit-appearance:none;
         }
         .btn-upload { background-color: #ff9800; }
         .btn-download { background-color: #4caf50; }
@@ -180,15 +197,15 @@ document.addEventListener('click', ()=>setTimeout(saveAll,300));
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 10px;
+            padding: 0;
             min-height: 0;
         }
         
         .logo-img {
-            max-width: 90%;
-            max-height: 90%;
-            width: auto;
-            height: auto;
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            max-height: none;
             display: block;
             object-fit: contain;
         }
@@ -433,9 +450,345 @@ document.addEventListener('click', ()=>setTimeout(saveAll,300));
     background: #fff;
     box-sizing: border-box;
 }
+
+        /* === Logo 編輯器工具 === */
+        .logo-editor-open-btn { background:#607d8b; }
+        .logo-editor-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.72);
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+        .logo-editor-modal.show { display: flex; }
+        .logo-editor-panel {
+            width: min(92vw, 920px);
+            max-height: 92vh;
+            background: #111;
+            color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,.5);
+            overflow: hidden;
+        }
+        .logo-editor-header,
+        .logo-editor-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: #1f1f1f;
+        }
+        .logo-editor-header {
+            justify-content: space-between;
+            font-weight: 700;
+        }
+        .logo-editor-body { padding: 14px; }
+        .logo-editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+        .logo-editor-toolbar input[type="range"] { width: 160px; }
+        .logo-editor-toolbar input[type="number"] {
+            width: 70px;
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #666;
+            background: #222;
+            color: #fff;
+        }
+        .logo-editor-btn {
+            border: 0;
+            border-radius: 6px;
+            padding: 7px 12px;
+            color: #fff;
+            background: #3f51b5;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+            line-height: 1;
+        }
+        .logo-editor-btn.green { background:#4caf50; }
+        .logo-editor-btn.gray { background:#555; }
+        .logo-editor-btn.red { background:#e53935; }
+        .logo-editor-stage-wrap {
+            width: 100%;
+            max-height: 66vh;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            padding: 12px;
+            border-radius: 10px;
+            background:
+                conic-gradient(#ccc 25%, #fff 0 50%, #ccc 0 75%, #fff 0) 0 0/20px 20px;
+        }
+        #logoEditorCanvas {
+            display: block;
+            width: 760px;
+            height: 420px;
+            max-width: 100%;
+            background: transparent;
+            cursor: grab;
+            border: 1px solid rgba(255,255,255,.35);
+            border-radius: 6px;
+        }
+        #logoEditorCanvas.dragging { cursor: grabbing; }
+        .logo-editor-tip {
+            color: #ddd;
+            font-size: 12px;
+            line-height: 1.4;
+            margin-top: 8px;
+        }
+        .logo-editor-file { display: none; }
+
+        /* === LOGO 歸檔位置浮動視窗 === */
+        .logo-path-float {
+            position: fixed;
+            top: 120px;
+            right: 16px;
+            z-index: 4900;
+            width: 360px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(17,17,17,.88);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(0,0,0,.28);
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .logo-path-float .title {
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .logo-path-float .path {
+            word-break: break-all;
+            color: #e8e8e8;
+            margin-bottom: 8px;
+        }
+        .logo-path-float button {
+            border: 0;
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: #607d8b;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+
+        /* === 說明書浮動按鈕與彈窗 === */
+        .manual-help-float {
+            position: fixed;
+            right: 22px;
+            bottom: 22px;
+            z-index: 4800;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: 0;
+            background: rgba(17, 17, 17, .48);
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0,0,0,.28);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+            transition: background .2s, transform .2s;
+        }
+        .manual-help-float:hover {
+            background: rgba(17, 17, 17, .72);
+            transform: translateY(-2px);
+        }
+        .manual-help-float .manual-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .manual-help-float .manual-label {
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+        }
+        .manual-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 5200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,.72);
+            padding: 24px;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+        .manual-modal.show { display: flex; }
+        .manual-panel {
+            position: relative;
+            width: min(94vw, 1280px);
+            max-height: 92vh;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 18px 50px rgba(0,0,0,.45);
+            overflow: hidden;
+        }
+        .manual-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 2;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 0;
+            background: rgba(0,0,0,.72);
+            color: #fff;
+            font-size: 28px;
+            line-height: 38px;
+            cursor: pointer;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+        .manual-image-wrap {
+            max-height: calc(92vh - 58px);
+            overflow: auto;
+            background: #f7f7f7;
+        }
+        .manual-image-wrap img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .manual-footer {
+            height: 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            background: #fff;
+            border-top: 1px solid #ddd;
+            color: #222;
+            font-size: 15px;
+        }
+        .manual-footer label {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .manual-footer input { width: 16px; height: 16px; }
+        .manual-ok-btn {
+            border: 0;
+            border-radius: 6px;
+            padding: 8px 18px;
+            background: #3f51b5;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+        }
+
+        /* === LOGO 顯示最大化：避免圖片被 max-width/max-height 或 padding 內縮 === */
+        .logo-box .logo-img-container {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+        }
+        .logo-box .logo-img {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            max-height: none;
+            object-fit: contain;
+        }
+
+        /* === LOGO 前端與下載一致：圖片等比例置中，不拉伸 === */
+        .logo-box .logo-img {
+            object-fit: contain !important;
+        }
+
 </style>
 </head>
 <body>
+
+<div id="logoPathFloat" class="logo-path-float">
+    <div class="title">LOGO歸檔位置：</div>
+    <div id="logoArchivePath" class="path">G:\共用雲端硬碟\INT_TWN_SHP_內部-素材\AI審圖\銀行\程式檔案\LOGO方</div>
+    <button type="button" onclick="copyLogoArchivePath()">複製路徑</button>
+</div>
+
+<button type="button" id="manualHelpFloat" class="manual-help-float" onclick="openManualModal()" aria-label="開啟說明書">
+    <div class="manual-icon">?</div>
+    <div class="manual-label">說明書</div>
+</button>
+
+<div id="manualModal" class="manual-modal" aria-hidden="true">
+    <div class="manual-panel">
+        <button type="button" class="manual-close" onclick="closeManualModal()" aria-label="關閉">×</button>
+        <div class="manual-image-wrap">
+            <img src="https://github.com/jimmywu-commits/index/blob/main/bankindex.png?raw=true" alt="信用卡回饋方案製圖工具使用說明書">
+        </div>
+        <div class="manual-footer">
+            <label>
+                <input type="checkbox" id="manualDontShowToday">
+                今日不再顯示
+            </label>
+            <button type="button" class="manual-ok-btn" onclick="closeManualModal()">我知道了</button>
+        </div>
+    </div>
+</div>
+
+<div id="logoEditorModal" class="logo-editor-modal" aria-hidden="true">
+    <div class="logo-editor-panel">
+        <div class="logo-editor-header">
+            <div>Logo 編輯器</div>
+            <button type="button" class="logo-editor-btn red" onclick="closeLogoEditorTool()">關閉</button>
+        </div>
+        <div class="logo-editor-body">
+            <div class="logo-editor-toolbar">
+                <input id="logoEditorFile" class="logo-editor-file" type="file" accept="image/*">
+                <button type="button" class="logo-editor-btn" onclick="document.getElementById('logoEditorFile').click()">上傳圖片</button>
+                <button type="button" class="logo-editor-btn gray" onclick="logoEditorFit()">置中適合</button>
+                <button type="button" class="logo-editor-btn gray" onclick="logoEditorZoomStep(-0.05)">－</button>
+                <label>縮放 <input id="logoEditorZoom" type="range" min="10" max="400" value="100" oninput="logoEditorSetZoom(this.value / 100)"></label>
+                <span id="logoEditorZoomText">100%</span>
+                <button type="button" class="logo-editor-btn gray" onclick="logoEditorZoomStep(0.05)">＋</button>
+                <label>裁切框寬 <input id="logoEditorCropW" type="number" value="234" min="50" max="760" oninput="logoEditorSetCrop()"></label>
+                <label>裁切框高 <input id="logoEditorCropH" type="number" value="234" min="50" max="420" oninput="logoEditorSetCrop()"></label>
+            </div>
+            <div class="logo-editor-stage-wrap">
+                <canvas id="logoEditorCanvas" width="760" height="420"></canvas>
+            </div>
+            <div class="logo-editor-tip">
+                操作方式：上傳圖片後，可拖曳圖片位置、滑鼠滾輪或縮放鈕放大縮小；虛線框內為下載裁切範圍。預設裁切尺寸：234 × 234。
+            </div>
+        </div>
+        <div class="logo-editor-actions">
+            <button type="button" class="logo-editor-btn green" onclick="downloadEditedLogo()">下載裁切後 JPG</button>
+            <button type="button" class="logo-editor-btn gray" onclick="closeLogoEditorTool()">取消</button>
+        </div>
+    </div>
+</div>
+
 
 <div id="floatingTip" class="floating-tip" role="status" aria-live="polite">
   <button class="tip-close" aria-label="關閉提醒" onclick="(function(){var b=document.getElementById('floatingTip'); if(b){ b.style.display='none'; }})();">×</button>
@@ -501,12 +854,16 @@ document.addEventListener('click', ()=>setTimeout(saveAll,300));
 
 <!-- 工單 + 圖片（資料夾）一次上傳：優先 File System Access API，fallback 用 webkitdirectory -->
 <input type="file" id="workOrderFolderInput" webkitdirectory directory multiple style="display:none;">
-<button class="tool-btn btn-upload" onclick="triggerWorkOrderWithImages()">上傳工單與圖片</button>
+<button class="tool-btn btn-upload" onclick="document.getElementById('fileInput').click()">上傳工單</button>
+
+        <input type="file" id="logoFolderInput" webkitdirectory directory multiple style="display:none;">
+        <button class="tool-btn btn-select" onclick="document.getElementById('logoFolderInput').click()">上傳 LOGO</button>
+        <button class="tool-btn btn-select logo-editor-open-btn" onclick="openLogoEditorTool()">logo編輯器</button>
+
 
         <div class="divider"></div>
 
         <!-- 獨立的 LOGO 資料夾上傳按鈕 -->
-        <input type="file" id="logoFolderInput" webkitdirectory directory multiple style="display:none;">
    
         
         <div class="divider"></div>
@@ -918,17 +1275,9 @@ function showTip(message, autoHideMs){
    - fallback：<input webkitdirectory>（常見相容方案）
 */
 async function triggerWorkOrderWithImages() {
-    // File System Access API
-    if (window.showDirectoryPicker) {
-        try {
-            await pickWorkOrderDirectoryViaFSAccess();
-            return;
-        } catch (e) {
-            // 使用者取消或權限問題 → fallback
-            console.warn('[FolderUpload] showDirectoryPicker 失敗，改用 webkitdirectory：', e);
-        }
-    }
-    const input = document.getElementById('workOrderFolderInput');
+    // 本頁已拆成「上傳工單」與「上傳 LOGO」兩個按鈕。
+    // 避免在 file:// 下使用 showDirectoryPicker 造成瀏覽器安全限制錯誤。
+    const input = document.getElementById('fileInput');
     if (input) {
         input.value = '';
         input.click();
@@ -998,7 +1347,7 @@ let currentTargetBlock = null;
         let currentBankNameForDownload = '';
 
         /* 預設 fallback logo 圖（請放在 index.html 同一層） */
-        const FALLBACK_LOGO_PATH = './download.svg';
+        const FALLBACK_LOGO_PATH = "data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27234%27 height=%27234%27 viewBox=%270 0 234 234%27%3E%3Crect width=%27234%27 height=%27234%27 fill=%27%23ffffff%27/%3E%3Ctext x=%2750%25%27 y=%2750%25%27 font-size=%2718%27 text-anchor=%27middle%27 dy=%27.3em%27 fill=%27%23666%27 font-family=%27Arial%27%3ELogo%E8%BC%89%E5%85%A5%E5%A4%B1%E6%95%97%3C/text%3E%3C/svg%3E";
 
         /* ===== LOGO 資料夾：由按鈕上傳的檔案清單建立 Map ===== */
         let logoNameToUrl = new Map();
@@ -1009,15 +1358,74 @@ let currentTargetBlock = null;
 
         function normalizeName(str) {
             if (!str) return '';
-            return str
+            return String(str)
+                .replace(/\.[^.]+$/g, '')
                 .replace(/\(.*?\)/g, '')
                 .replace(/（.*?）/g, '')
-                .replace(/\s+/g, '')
+                .replace(/[\s\-_＿－—–‧・.．]+/g, '')
+                .replace(/logo/ig, '')
                 .toLowerCase();
         }
 
+        function findBestLogoKey(bankNameRaw) {
+            if (!logoNameToUrl || logoNameToUrl.size === 0) return null;
+
+            const safeName = String(bankNameRaw || '').replace(/[\\\/:*?"<>|]/g, '').trim();
+            const normBank = normalizeName(safeName);
+            if (!normBank) return null;
+
+            let bestKey = null;
+            let bestScore = 0;
+
+            for (const key of logoNameToUrl.keys()) {
+                const normKey = normalizeName(key);
+                if (!normKey) continue;
+
+                let score = 0;
+                if (normKey === normBank) score = 100;
+                else if (normKey.includes(normBank)) score = 90;
+                else if (normBank.includes(normKey)) score = 80;
+                else {
+                    const shorter = normKey.length < normBank.length ? normKey : normBank;
+                    const longer = normKey.length >= normBank.length ? normKey : normBank;
+                    if (shorter.length >= 2 && longer.includes(shorter)) score = 60 + shorter.length;
+                }
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestKey = key;
+                }
+            }
+
+            return bestKey;
+        }
+
+        function refreshAllVisibleLogos() {
+            try {
+                const selector = document.getElementById('bank-selector');
+                const mode = selector ? selector.value : '__ALL__';
+
+                if (mode === '__ALL__') {
+                    renderAllBanks();
+                    try { applyDraftForCurrentSelection(); } catch(e) {}
+                    try { syncSidebarHeightToRightContent(document); } catch(e) {}
+                } else if (currentBankNameForDownload) {
+                    loadBankLogo(currentBankNameForDownload);
+                } else if (mode && mode !== '__ALL__' && Array.isArray(allBankData)) {
+                    const selectedBank = allBankData.find(bank => bank.id === mode);
+                    if (selectedBank) loadBankLogo(selectedBank.logoName);
+                }
+            } catch (e) {
+                console.warn('refreshAllVisibleLogos error', e);
+            }
+        }
+
         function handleLogoFolderFiles(fileList) {
-            const files = Array.from(fileList || []).filter(f => (f.type && f.type.startsWith('image/')) && isLogoFangFile(f, f.webkitRelativePath || f.relativePath || ''));
+            const files = Array.from(fileList || []).filter(f => {
+                const name = (f.name || '').toLowerCase();
+                const isImage = (f.type && f.type.startsWith('image/')) || /\.(png|jpe?g|gif|webp|svg)$/i.test(name);
+                return isImage && isLogoFangFile(f, f.webkitRelativePath || f.relativePath || f.name);
+            });
 
             if (!files.length) {
                 showToast('LOGO 資料夾裡沒有圖片檔', 'error');
@@ -1042,13 +1450,9 @@ let currentTargetBlock = null;
                 const arr = Array.from(duplicateNames);
                 showToast(`偵測到重複檔名（只採第一個）：${arr.slice(0, 5).join('、')}${arr.length > 5 ? '…' : ''}`, 'info');
             }
-
-            if (currentBankNameForDownload) {
-                loadBankLogo(currentBankNameForDownload);
-            }
-        
-    // 設定 LOGO 旗標
-    try { hasLogos = (logoNameToUrl && logoNameToUrl.size > 0); } catch(e) {}
+            // 設定 LOGO 旗標，並立即重套目前畫面上的 LOGO
+            try { hasLogos = (logoNameToUrl && logoNameToUrl.size > 0); } catch(e) {}
+            refreshAllVisibleLogos();
 }
 
         function showToast(message, type = 'error') {
@@ -1237,6 +1641,113 @@ function openColorPickerSelf(button) {
             wrapper.style.transformOrigin = 'top center';
         }
 
+
+/* ===== 下載前固定 LOGO 視覺：避免 html2canvas 對 object-fit 支援不完整造成拉伸 ===== */
+async function freezeLogoImagesForDownload(container) {
+    const restoreTasks = [];
+    const loadPromises = [];
+
+    try {
+        const root = container || document;
+        const imgs = Array.from(root.querySelectorAll('img.logo-img'));
+
+        imgs.forEach(img => {
+            if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return;
+
+            const holder = img.closest('.logo-img-container') || img.parentElement || img;
+            const rect = holder.getBoundingClientRect();
+            const boxW = Math.max(1, Math.round(rect.width));
+            const boxH = Math.max(1, Math.round(rect.height));
+            if (!boxW || !boxH) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = boxW;
+            canvas.height = boxH;
+            const ctx = canvas.getContext('2d');
+
+            // 維持下載白底，不讓透明 LOGO 在 JPG 變黑
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, boxW, boxH);
+
+            const imgRatio = img.naturalWidth / img.naturalHeight;
+            const boxRatio = boxW / boxH;
+
+            let drawW, drawH, drawX, drawY;
+
+            // 完全等比例 contain：跟前端 object-fit: contain 的視覺一致，不拉伸
+            if (imgRatio > boxRatio) {
+                drawW = boxW;
+                drawH = boxW / imgRatio;
+                drawX = 0;
+                drawY = (boxH - drawH) / 2;
+            } else {
+                drawH = boxH;
+                drawW = boxH * imgRatio;
+                drawX = (boxW - drawW) / 2;
+                drawY = 0;
+            }
+
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, drawX, drawY, drawW, drawH);
+
+            const oldSrc = img.src;
+            const oldStyle = {
+                width: img.style.width,
+                height: img.style.height,
+                maxWidth: img.style.maxWidth,
+                maxHeight: img.style.maxHeight,
+                objectFit: img.style.objectFit,
+                display: img.style.display
+            };
+
+            const pngUrl = canvas.toDataURL('image/png');
+
+            const p = new Promise(resolve => {
+                const done = () => {
+                    img.removeEventListener('load', done);
+                    img.removeEventListener('error', done);
+                    resolve();
+                };
+                img.addEventListener('load', done);
+                img.addEventListener('error', done);
+                img.src = pngUrl;
+                img.style.width = boxW + 'px';
+                img.style.height = boxH + 'px';
+                img.style.maxWidth = 'none';
+                img.style.maxHeight = 'none';
+                img.style.objectFit = 'fill';
+                img.style.display = 'block';
+            });
+
+            loadPromises.push(p);
+
+            restoreTasks.push(() => {
+                img.src = oldSrc;
+                img.style.width = oldStyle.width;
+                img.style.height = oldStyle.height;
+                img.style.maxWidth = oldStyle.maxWidth;
+                img.style.maxHeight = oldStyle.maxHeight;
+                img.style.objectFit = oldStyle.objectFit;
+                img.style.display = oldStyle.display;
+            });
+        });
+
+        await Promise.all(loadPromises);
+        // 給瀏覽器一個 frame 完成重排，避免 html2canvas 抓到舊狀態
+        await new Promise(resolve => requestAnimationFrame(() => resolve()));
+    } catch (e) {
+        console.warn('[DownloadLogoFreeze] failed:', e);
+    }
+
+    return function restoreFrozenLogos() {
+        restoreTasks.reverse().forEach(fn => {
+            try { fn(); } catch(e) {}
+        });
+    };
+}
+
+
         /* ---- 下載 JPG ---- */
                 async function downloadImage() {
             const selector = document.getElementById('bank-selector');
@@ -1308,8 +1819,9 @@ if (mode === '__ALL__') {
         localEditBtns.forEach(btn => btn.style.display = 'none');
         localColorBtns.forEach(btn => btn.style.display = 'none');
 
-        // 確保圖片都載入完再截圖
+        // 確保圖片都載入完再截圖，並固定 LOGO 視覺避免下載變形
         await waitForImages(banner);
+        const restoreLogos = await freezeLogoImagesForDownload(banner);
 
         try {
             const canvas = await html2canvas(banner, { 
@@ -1326,6 +1838,7 @@ if (mode === '__ALL__') {
             console.warn('[DownloadAll] html2canvas 失敗：', bankName, e);
             showToast(`截圖失敗：${bankName}`, 'error');
         } finally {
+            try { restoreLogos(); } catch(e) {}
             localEditBtns.forEach(btn => btn.style.display = '');
             localColorBtns.forEach(btn => btn.style.display = '');
         }
@@ -1351,6 +1864,8 @@ if (mode === '__ALL__') {
             const element = document.getElementById("capture-area");
             const cleanFileName = (currentBankNameForDownload || '銀行回饋').replace(/\s/g, '_');
             
+const restoreLogos = await freezeLogoImagesForDownload(element);
+
 try {
     const canvas = await html2canvas(element, { 
         scale: 1, 
@@ -1362,6 +1877,7 @@ try {
     link.href = canvas.toDataURL("image/jpeg", 0.9);
     link.click();
 } finally {
+    try { restoreLogos(); } catch(e) {}
     if (logoBtn) logoBtn.style.display = 'flex';
     colorBtns.forEach(btn => btn.style.display = 'flex');
 
@@ -1451,18 +1967,7 @@ try {
             const safeName = bankName.replace(/[\\\/:*?"<>|]/g, '').trim();
 
             if (logoNameToUrl && logoNameToUrl.size > 0) {
-                const normBank = normalizeName(safeName);
-                let matchedKey = null;
-
-                for (const key of logoNameToUrl.keys()) {
-                    const normKey = normalizeName(key);
-                    if (!normKey) continue;
-
-                    if (normBank.includes(normKey)) {
-                        matchedKey = key;
-                        break;
-                    }
-                }
+                const matchedKey = findBestLogoKey(safeName);
 
                 if (matchedKey) {
                     const url = logoNameToUrl.get(matchedKey);
@@ -1542,14 +2047,8 @@ try {
             const safeName = bankName.replace(/[\\\/:*?"<>|]/g, '').trim();
 
             if (logoNameToUrl && logoNameToUrl.size > 0) {
-                const normBank = normalizeName(safeName);
-                for (const key of logoNameToUrl.keys()) {
-                    const normKey = normalizeName(key);
-                    if (!normKey) continue;
-                    if (normBank.includes(normKey)) {
-                        return logoNameToUrl.get(key);
-                    }
-                }
+                const matchedKey = findBestLogoKey(safeName);
+                if (matchedKey) return logoNameToUrl.get(matchedKey);
             }
 
             return FALLBACK_LOGO_PATH;
@@ -2030,20 +2529,30 @@ document.getElementById('workOrderFolderInput').addEventListener('change', (even
         handleWorkOrderFolderFiles(files, false);
     }
 });
-
-        document.getElementById('logoFolderInput').addEventListener('change', (event) => {
-            const files = event.target.files;
-            if (files && files.length > 0) {
-                handleLogoFolderFiles(files);
-            }
-        });
         
+        
+function bindLogoFolderInput() {
+    const input = document.getElementById('logoFolderInput');
+    if (!input || input.dataset.bound === '1') return;
+    input.dataset.bound = '1';
+    input.addEventListener('change', function(event) {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            handleLogoFolderFiles(files);
+        } else {
+            showToast('未選擇任何 LOGO 檔案', 'error');
+        }
+    });
+}
+
+
         window.addEventListener('resize', function(){
             syncSidebarHeightToRightContent(document);
                 setupItemContentEditing(document);
         });
 
         document.addEventListener('DOMContentLoaded', () => {
+            bindLogoFolderInput();
             applyEditorScale();
             bindAutosave(document);
 
@@ -2075,9 +2584,15 @@ document.getElementById('workOrderFolderInput').addEventListener('change', (even
     
 // === 強制只吃「LOGO方」資料夾內的圖片（寫死規則） ===
 function isLogoFangFile(file, relativePath) {
-  // relativePath 來自 webkitRelativePath 或自行組合的路徑
-  const path = relativePath || file.name || "";
-  return path.includes("LOGO方/") && !path.includes("LOGO橫/") && !path.includes("程式檔案\\LOGO橫") && !path.includes("程式檔案/LOGO橫");
+  // 支援兩種情境：
+  // 1) 上傳整包資料夾：路徑內含 LOGO方/
+  // 2) 直接選 LOGO方 資料夾本身：webkitRelativePath 通常是「LOGO方/xxx.png」
+  // 3) 若瀏覽器只回傳檔名，也允許圖片進入，避免按鈕看似無反應
+  const path = String(relativePath || file.name || "");
+  const normalized = path.replace(/\\/g, "/");
+  if (normalized.includes("LOGO橫/") || normalized.includes("程式檔案/LOGO橫")) return false;
+  if (normalized.includes("LOGO方/")) return true;
+  return !normalized.includes("/");
 }
 
 
@@ -2118,6 +2633,301 @@ function loadAll(){
 
 document.addEventListener('input', saveAll);
 document.addEventListener('click', ()=>setTimeout(saveAll,300));
+
+
+
+/* ===== LOGO 歸檔路徑複製 ===== */
+function copyLogoArchivePath() {
+    const path = 'G:\\共用雲端硬碟\\INT_TWN_SHP_內部-素材\\AI審圖\\銀行\\程式檔案\\LOGO方';
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(path).then(function() {
+            if (typeof showToast === 'function') showToast('已複製 LOGO 歸檔路徑', 'success');
+            else alert('已複製路徑');
+        }).catch(function() {
+            fallbackCopyLogoArchivePath(path);
+        });
+    } else {
+        fallbackCopyLogoArchivePath(path);
+    }
+}
+
+function fallbackCopyLogoArchivePath(path) {
+    const ta = document.createElement('textarea');
+    ta.value = path;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    ta.remove();
+    if (typeof showToast === 'function') showToast('已複製 LOGO 歸檔路徑', 'success');
+    else alert('已複製路徑');
+}
+
+/* ===== 說明書彈窗 ===== */
+const MANUAL_IMAGE_URL = 'https://github.com/jimmywu-commits/index/blob/main/bankindex.png?raw=true';
+const MANUAL_HIDE_KEY = 'index_manual_hide_date';
+
+function todayKeyForManual() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function openManualModal() {
+    const modal = document.getElementById('manualModal');
+    if (!modal) return;
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+}
+
+function closeManualModal() {
+    const checkbox = document.getElementById('manualDontShowToday');
+    if (checkbox && checkbox.checked) {
+        try {
+            localStorage.setItem(MANUAL_HIDE_KEY, todayKeyForManual());
+        } catch(e) {}
+    }
+    const modal = document.getElementById('manualModal');
+    if (!modal) return;
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function shouldShowManualToday() {
+    try {
+        return localStorage.getItem(MANUAL_HIDE_KEY) !== todayKeyForManual();
+    } catch(e) {
+        return true;
+    }
+}
+
+/* ===== Logo 編輯器工具：上傳 / 拖曳 / 縮放 / 裁切 / 下載 ===== */
+const logoEditorState = {
+    img: null,
+    imgSrc: '',
+    originalFileName: 'logo_edited',
+    scale: 1,
+    x: 380,
+    y: 210,
+    dragging: false,
+    startX: 0,
+    startY: 0,
+    startImgX: 0,
+    startImgY: 0,
+    cropW: 234,
+    cropH: 234
+};
+
+function openLogoEditorTool() {
+    const modal = document.getElementById('logoEditorModal');
+    if (!modal) return;
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+    requestAnimationFrame(drawLogoEditor);
+}
+
+function closeLogoEditorTool() {
+    const modal = document.getElementById('logoEditorModal');
+    if (!modal) return;
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+}
+
+function logoEditorCanvas() {
+    return document.getElementById('logoEditorCanvas');
+}
+
+function logoEditorSetCrop() {
+    const w = Number(document.getElementById('logoEditorCropW')?.value || 234);
+    const h = Number(document.getElementById('logoEditorCropH')?.value || 234);
+    const canvas = logoEditorCanvas();
+    if (!canvas) return;
+    logoEditorState.cropW = Math.max(50, Math.min(canvas.width, w));
+    logoEditorState.cropH = Math.max(50, Math.min(canvas.height, h));
+    drawLogoEditor();
+}
+
+function logoEditorSetZoom(scale) {
+    if (!logoEditorState.img) return;
+    const next = Math.max(0.1, Math.min(4, Number(scale) || 1));
+    logoEditorState.scale = next;
+    const slider = document.getElementById('logoEditorZoom');
+    const text = document.getElementById('logoEditorZoomText');
+    if (slider) slider.value = Math.round(next * 100);
+    if (text) text.textContent = Math.round(next * 100) + '%';
+    drawLogoEditor();
+}
+
+function logoEditorZoomStep(step) {
+    logoEditorSetZoom((logoEditorState.scale || 1) + step);
+}
+
+function logoEditorFit() {
+    const canvas = logoEditorCanvas();
+    const img = logoEditorState.img;
+    if (!canvas || !img) return;
+    const cropW = logoEditorState.cropW || 234;
+    const cropH = logoEditorState.cropH || 234;
+    const fit = Math.min(cropW / img.naturalWidth, cropH / img.naturalHeight);
+    logoEditorState.scale = Math.max(0.1, Math.min(4, fit));
+    logoEditorState.x = canvas.width / 2;
+    logoEditorState.y = canvas.height / 2;
+    logoEditorSetZoom(logoEditorState.scale);
+    drawLogoEditor();
+}
+
+function drawLogoEditor() {
+    const canvas = logoEditorCanvas();
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const cropW = Math.max(50, Math.min(canvas.width, logoEditorState.cropW || 234));
+    const cropH = Math.max(50, Math.min(canvas.height, logoEditorState.cropH || 234));
+    const cropX = (canvas.width - cropW) / 2;
+    const cropY = (canvas.height - cropH) / 2;
+
+    if (logoEditorState.img) {
+        const img = logoEditorState.img;
+        const w = img.naturalWidth * logoEditorState.scale;
+        const h = img.naturalHeight * logoEditorState.scale;
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, logoEditorState.x - w / 2, logoEditorState.y - h / 2, w, h);
+    } else {
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,.45)';
+        ctx.font = '20px Arial, "Microsoft JhengHei", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('請先上傳 Logo 圖片', canvas.width / 2, canvas.height / 2);
+        ctx.restore();
+    }
+
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.fillRect(0, 0, canvas.width, cropY);
+    ctx.fillRect(0, cropY + cropH, canvas.width, canvas.height - cropY - cropH);
+    ctx.fillRect(0, cropY, cropX, cropH);
+    ctx.fillRect(cropX + cropW, cropY, canvas.width - cropX - cropW, cropH);
+
+    ctx.strokeStyle = '#00E5FF';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.strokeRect(cropX, cropY, cropW, cropH);
+
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#00E5FF';
+    ctx.font = '13px Arial, "Microsoft JhengHei", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${Math.round(cropW)} × ${Math.round(cropH)} px`, cropX + 8, cropY + 18);
+    ctx.restore();
+}
+
+function downloadEditedLogo() {
+    const canvas = logoEditorCanvas();
+    const img = logoEditorState.img;
+    if (!canvas || !img) {
+        showToast('請先上傳圖片', 'error');
+        return;
+    }
+
+    const cropW = Math.max(50, Math.min(canvas.width, logoEditorState.cropW || 234));
+    const cropH = Math.max(50, Math.min(canvas.height, logoEditorState.cropH || 234));
+    const cropX = (canvas.width - cropW) / 2;
+    const cropY = (canvas.height - cropH) / 2;
+
+    const output = document.createElement('canvas');
+    output.width = Math.round(cropW);
+    output.height = Math.round(cropH);
+    const octx = output.getContext('2d');
+
+    octx.fillStyle = '#FFFFFF';
+    octx.fillRect(0, 0, output.width, output.height);
+
+    const w = img.naturalWidth * logoEditorState.scale;
+    const h = img.naturalHeight * logoEditorState.scale;
+    octx.imageSmoothingEnabled = true;
+    octx.imageSmoothingQuality = 'high';
+    octx.drawImage(img, logoEditorState.x - w / 2 - cropX, logoEditorState.y - h / 2 - cropY, w, h);
+
+    const link = document.createElement('a');
+    link.download = (logoEditorState.originalFileName || 'logo_edited') + '.jpg';
+    link.href = output.toDataURL('image/jpeg', 0.95);
+    link.click();
+}
+
+function initLogoEditorTool() {
+    const input = document.getElementById('logoEditorFile');
+    const canvas = logoEditorCanvas();
+    if (!input || !canvas || input.dataset.bound === '1') return;
+    input.dataset.bound = '1';
+
+    input.addEventListener('change', function(e) {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            const img = new Image();
+            img.onload = function() {
+                logoEditorState.img = img;
+                logoEditorState.imgSrc = evt.target.result;
+                logoEditorState.originalFileName = (file.name || 'logo_edited').replace(/\.[^.]+$/, '');
+                logoEditorSetCrop();
+                logoEditorFit();
+                showToast('Logo 已載入，可開始編輯', 'success');
+            };
+            img.src = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+    });
+
+    canvas.addEventListener('mousedown', function(e) {
+        if (!logoEditorState.img) return;
+        const rect = canvas.getBoundingClientRect();
+        logoEditorState.dragging = true;
+        logoEditorState.startX = (e.clientX - rect.left) * (canvas.width / rect.width);
+        logoEditorState.startY = (e.clientY - rect.top) * (canvas.height / rect.height);
+        logoEditorState.startImgX = logoEditorState.x;
+        logoEditorState.startImgY = logoEditorState.y;
+        canvas.classList.add('dragging');
+        e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!logoEditorState.dragging) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+        const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+        logoEditorState.x = logoEditorState.startImgX + (x - logoEditorState.startX);
+        logoEditorState.y = logoEditorState.startImgY + (y - logoEditorState.startY);
+        drawLogoEditor();
+    });
+
+    window.addEventListener('mouseup', function() {
+        logoEditorState.dragging = false;
+        canvas.classList.remove('dragging');
+    });
+
+    canvas.addEventListener('wheel', function(e) {
+        if (!logoEditorState.img) return;
+        e.preventDefault();
+        logoEditorZoomStep(e.deltaY < 0 ? 0.05 : -0.05);
+    }, { passive: false });
+
+    drawLogoEditor();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initLogoEditorTool();
+    if (shouldShowManualToday()) {
+        setTimeout(openManualModal, 250);
+    }
+});
 
 </script>
 </body>
