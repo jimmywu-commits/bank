@@ -42,8 +42,8 @@ function updateRowGap() {
             --content-size: 27px;
             --note-size: 36.31px;
 
-            --highlight-red: #E60012;
-            --content-text-color: #000000;
+            --highlight-red: #c00000;
+            --content-text-color: #222222;
 
             --card-w: 304px;
             --card-h: 350px;
@@ -247,6 +247,7 @@ function updateRowGap() {
             font-size: var(--content-size);
             line-height: 1.2;
             letter-spacing: 0px;
+            color: var(--content-text-color);
         }
         .line-red {
             font-family: 'ShopeeRegular';
@@ -715,28 +716,11 @@ function updateRowGap() {
     </div>
 
     <div class="divider"></div>
+    <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#c00000')" style="background-color:#c00000;width:120px;">換紅色</button>
+    <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#868584')" style="background-color:#868584;width:120px;">換灰色</button>
+    <button class="tool-btn btn-select" onmousedown="event.preventDefault(); applyColorToSelection('#222222')" style="background-color:#222222;width:120px;">換黑色</button>
 
-    <!-- 高亮色 -->
-    <div class="input-group">
-        <label>高亮色</label>
-        <input type="text" id="highlight-hex" value="#E60012" onchange="updateColorVar('--highlight-red', this.value)">
-        <input type="color" id="highlight-picker"
-               style="width:0;height:0;padding:0;border:none;opacity:0;position:absolute;"
-               oninput="updateHexInputAndVar('highlight', this.value)">
-        <button class="tool-btn btn-select" onclick="document.getElementById('highlight-picker').click()">選</button>
-    </div>
-
-    <!-- 內文字色 -->
-    <div class="input-group">
-        <label>內文色</label>
-        <input type="text" id="content-text-hex" value="#000000" onchange="updateColorVar('--content-text-color', this.value)">
-        <input type="color" id="content-picker"
-               style="width:0;height:0;padding:0;border:none;opacity:0;position:absolute;"
-               oninput="updateHexInputAndVar('content-text', this.value)">
-        <button class="tool-btn btn-select" onclick="document.getElementById('content-picker').click()">選</button>
-    </div>
-
-    <div class="divider"></div>
+<div class="divider"></div>
 
     <!-- 上傳工單 / 上傳 LOGO -->
     <input type="file" id="fileInput" accept=".xlsx" style="display:none;">
@@ -885,6 +869,53 @@ function updateHexInputAndVar(inputIdPrefix, colorValue) {
 
     if (variableName) updateColorVar(variableName, colorValue);
 }
+
+
+// === 選取範圍暫存（避免點工具列後消失） ===
+let __savedRange = null;
+
+function saveSelectionRange() {
+    try {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0) return;
+        const r = sel.getRangeAt(0);
+        if (!r || r.collapsed) return;
+        __savedRange = r.cloneRange();
+    } catch (e) {}
+}
+
+document.addEventListener('mouseup', saveSelectionRange);
+document.addEventListener('keyup', saveSelectionRange);
+
+function applyColorToSelection(color) {
+    try {
+        const sel = window.getSelection();
+        const range = (__savedRange && !__savedRange.collapsed)
+            ? __savedRange
+            : (sel && sel.rangeCount ? sel.getRangeAt(0) : null);
+
+        if (!range || range.collapsed) return;
+
+        if (sel) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
+        const span = document.createElement('span');
+        span.style.color = color;
+
+        try {
+            range.surroundContents(span);
+        } catch (e) {
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('foreColor', false, color);
+        }
+
+        __savedRange = null;
+        if (sel) sel.removeAllRanges();
+    } catch (e) {}
+}
+
 
 function downloadImage() {
     const element = document.getElementById('capture-area');
