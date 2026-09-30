@@ -1715,8 +1715,16 @@ async function freezeLogoImagesForDownload(container) {
             canvas.height = boxH;
             const ctx = canvas.getContext('2d');
 
-            // 維持下載白底，不讓透明 LOGO 在 JPG 變黑
-            ctx.fillStyle = '#FFFFFF';
+            // 底色改用 logo-box 實際吸到的顏色（找不到或透明時才退回白底，避免 JPG 變黑）
+            let fillColor = '#FFFFFF';
+            try {
+                const logoBox = img.closest('.logo-box');
+                const bg = logoBox ? window.getComputedStyle(logoBox).backgroundColor : '';
+                if (bg && bg !== 'transparent' && !/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*,\s*0\s*\)/.test(bg)) {
+                    fillColor = bg;
+                }
+            } catch (e) {}
+            ctx.fillStyle = fillColor;
             ctx.fillRect(0, 0, boxW, boxH);
 
             const imgRatio = img.naturalWidth / img.naturalHeight;
